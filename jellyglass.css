@@ -1,0 +1,3238 @@
+/* =====================================================================
+   JellyGlass — a liquid-glass theme for Jellyfin 12
+   https://github.com/rixked/JellyGlass-Theme
+   ---------------------------------------------------------------------
+   Install: Dashboard → General → "Custom CSS code", paste ONE line:
+     @import url("https://cdn.jsdelivr.net/gh/rixked/JellyGlass-Theme@main/jellyglass.css");
+   → Save → hard-refresh (Ctrl+Shift+R). Or paste this whole file instead.
+   Built for the default "Dark" display theme.
+   Tip: Settings → Display → turn on "Backdrops" — the glass looks best
+        with artwork behind it.
+
+   Sections:
+     1–12  base glass theme (header, menu, cards, buttons, dialogs …)
+     13    movie / show page hero layout (desktop browser only)
+     14    video player: minimal controls, skip button, Up Next card,
+           player menus (delete section 14 for the stock player)
+     15    login screen
+   No TV-specific rules: TV apps (e.g. LG) keep Jellyfin's own movie
+   pages, focus styles and player behaviour.
+   Left untouched on purpose:
+     • the video image itself
+     • the "Now Playing" / queue screen (#nowPlayingPage)
+     • the mini player bar at the bottom (.nowPlayingBar)
+   ===================================================================== */
+
+
+/* =====================================================================
+   1. TOKENS — change the whole look from here
+   ===================================================================== */
+
+:root {
+  --lg-bg:            #0b0d12;
+  --lg-text-dim:      rgba(255, 255, 255, 0.64);
+
+  /* ── THEME COLOUR: the ONE line to change ────────────────────────
+     Red Green Blue, 0–255, separated by spaces. Examples:
+       mint green 52 211 153 · blue 59 130 246 · purple 168 85 247
+       pink 236 72 153 · orange 249 115 22 · red 239 68 68
+     Everything else (lighter/darker shades, glows, Jellyfin's own
+     buttons and checkboxes) is calculated from it.               */
+  --lg-accent-rgb:    52 211 153;
+
+  /* text ON the theme colour (dark suits light colours; use #fff
+     if you pick a dark theme colour) */
+  --lg-on-accent:     #04261a;
+
+  /* derived — no need to touch */
+  --lg-accent:        rgb(var(--lg-accent-rgb));
+  --lg-accent-light:  #6ee7b7;    /* fallbacks for old browsers;     */
+  --lg-accent-lighter:#bbf7d0;    /* recalculated from the theme     */
+  --lg-accent-dark:   #059669;    /* colour below where supported    */
+  --lg-accent-hover:  #4ade9b;
+  --lg-accent-soft:   rgb(var(--lg-accent-rgb) / 0.16);
+  --lg-accent-ring:   rgb(var(--lg-accent-rgb) / 0.38);
+  --lg-accent-glow:   rgb(var(--lg-accent-rgb) / 0.45);
+
+  /* the glass recipe */
+  --lg-tint:          rgba(20, 24, 32, 0.42);        /* body of the glass  */
+  --lg-tint-strong:   rgba(20, 24, 32, 0.68);        /* menus, dialogs     */
+  --lg-sheen:         linear-gradient(145deg,
+                        rgba(255, 255, 255, 0.13) 0%,
+                        rgba(255, 255, 255, 0.04) 42%,
+                        rgba(255, 255, 255, 0.02) 60%,
+                        rgba(255, 255, 255, 0.08) 100%);
+  --lg-edge:          rgba(255, 255, 255, 0.14);     /* hairline rim       */
+  --lg-blur:          blur(28px) saturate(185%);
+  --lg-highlight:     inset 0 1px 0 rgba(255, 255, 255, 0.30),
+                      inset 0 -1px 0 rgba(255, 255, 255, 0.05),
+                      inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+  --lg-drop:          0 12px 36px rgba(0, 0, 0, 0.40);
+
+  --lg-r-sm:          12px;
+  --lg-r:             16px;
+  --lg-r-lg:          24px;
+  --lg-pill:          999px;
+  --lg-ease:          cubic-bezier(0.22, 0.8, 0.24, 1);
+}
+@supports (color: color-mix(in srgb, red, blue)) {
+  :root {
+    --lg-accent-light:   color-mix(in srgb, var(--lg-accent) 55%, white);
+    --lg-accent-lighter: color-mix(in srgb, var(--lg-accent) 30%, white);
+    --lg-accent-dark:    color-mix(in srgb, var(--lg-accent) 62%, black);
+    --lg-accent-hover:   color-mix(in srgb, var(--lg-accent) 85%, white);
+  }
+}
+
+/* "reduce transparency" users get solid glass (no blur cost) */
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --lg-blur: none;
+    --lg-tint: rgba(24, 28, 36, 0.94);
+    --lg-tint-strong: rgba(24, 28, 36, 0.98);
+  }
+}
+
+
+/* Jellyfin's own accent colour (links, checkboxes, active buttons,
+   selected items, MUI components) → the same green */
+html[data-theme],
+:root {
+  --jf-palette-primary-main: var(--lg-accent);
+  --jf-palette-primary-mainChannel: var(--lg-accent-rgb);
+  --jf-palette-primary-light: var(--lg-accent-light);
+  --jf-palette-primary-lightChannel: var(--lg-accent-rgb);
+  --jf-palette-primary-dark: var(--lg-accent-dark);
+  --jf-palette-primary-darkChannel: var(--lg-accent-rgb);
+  --jf-palette-primary-contrastText: var(--lg-on-accent);
+  --jf-palette-secondary-main: var(--lg-accent);
+  --jf-palette-secondary-mainChannel: var(--lg-accent-rgb);
+  --jf-palette-secondary-light: var(--lg-accent-light);
+  --jf-palette-secondary-lightChannel: var(--lg-accent-rgb);
+  --jf-palette-secondary-dark: var(--lg-accent-dark);
+  --jf-palette-secondary-darkChannel: var(--lg-accent-rgb);
+  --jf-palette-secondary-contrastText: var(--lg-on-accent);
+}
+
+/* places where Jellyfin hard-codes its blue */
+.mdl-slider {
+  color: var(--lg-accent);
+}
+.mdl-slider::-webkit-slider-thumb {
+  background: var(--lg-accent);
+}
+.mdl-slider::-moz-range-thumb {
+  background: var(--lg-accent);
+}
+.mdl-slider-background-lower,
+.sliderMarker.watched {
+  background-color: var(--lg-accent);
+}
+.mdl-switch__input:checked + .mdl-switch__label + .mdl-switch__trackContainer > .mdl-switch__track {
+  background: rgb(var(--lg-accent-rgb) / 0.5);
+}
+.mdl-switch__input:checked + .mdl-switch__label + .mdl-switch__trackContainer > .mdl-switch__thumb {
+  background: var(--lg-accent);
+}
+.mdl-switch__input:checked:focus + .mdl-switch__label + .mdl-switch__trackContainer .mdl-switch__focus-helper {
+  box-shadow: 0 0 0 1.39em rgb(var(--lg-accent-rgb) / 0.26);
+  background-color: rgb(var(--lg-accent-rgb) / 0.26);
+}
+.mdl-radio.show-focus .mdl-radio__button:focus + .mdl-radio__circles .mdl-radio__outer-circle,
+.mdl-radio.show-focus .mdl-radio__button:focus + .mdl-radio__circles .mdl-radio__inner-circle {
+  color: var(--lg-accent);
+}
+.mdl-radio__focus-circle {
+  background: var(--lg-accent);
+}
+.mdl-spinner__layer-1,
+.mdl-spinner__layer-2,
+.mdl-spinner__layer-3,
+.mdl-spinner__layer-4 {
+  border-color: var(--lg-accent) !important;
+}
+.listItemImageButton:hover {
+  color: var(--lg-accent);
+}
+.listItemIcon:not(.listItemIcon-transparent) {
+  background-color: var(--lg-accent);
+}
+.iconOsdProgressInner {
+  background: var(--lg-accent);
+}
+
+
+/* "watched" checkmark (movie page, episode rows, menus): green instead of
+   Jellyfin's red. The favourite heart shares that red and stays red. */
+button .playstatebutton-icon-played {
+  color: var(--lg-accent);
+  transition: color 0.2s ease, filter 0.2s ease;
+}
+/* on hover (rows and buttons glow green themselves): brighter mint with a
+   small glow so the check still stands out from the green highlight */
+.listItem:hover .playstatebutton-icon-played,
+button:hover > .playstatebutton-icon-played,
+button:hover .playstatebutton-icon-played {
+  color: var(--lg-accent-lighter);
+  filter: drop-shadow(0 0 5px rgb(var(--lg-accent-rgb) / 0.85));
+}
+/* the newer React version of the button (library grids, card hover menus,
+   lists) draws the check as an SVG in MUI's red "error" colour */
+svg.MuiSvgIcon-colorError[data-testid="CheckIcon"] {
+  color: var(--lg-accent) !important;
+  transition: color 0.2s ease, filter 0.2s ease;
+}
+button:hover svg.MuiSvgIcon-colorError[data-testid="CheckIcon"],
+.listItem:hover svg.MuiSvgIcon-colorError[data-testid="CheckIcon"] {
+  color: var(--lg-accent-lighter) !important;
+  filter: drop-shadow(0 0 5px rgb(var(--lg-accent-rgb) / 0.85));
+}
+/* keyboard / remote focus fills the button green → check takes the dark
+   text colour so it doesn't disappear into the fill */
+.emby-button.show-focus:focus .playstatebutton-icon-played {
+  color: inherit !important;
+  filter: none;
+}
+
+
+/* =====================================================================
+   2. AMBIENT BACKGROUND — gives the glass something to refract
+   ===================================================================== */
+
+/* (not while a video plays: Jellyfin then makes this layer transparent
+   so the video shows through — overriding that would hide the video) */
+.backgroundContainer:not(.withBackdrop):not(.backgroundContainer-transparent) {
+  background:
+    radial-gradient(60vw 60vh at 8% -5%,  rgb(var(--lg-accent-rgb) / 0.17), transparent 70%),
+    radial-gradient(55vw 55vh at 100% 105%, rgb(var(--lg-accent-rgb) / 0.10), transparent 70%),
+    radial-gradient(40vw 40vh at 70% 30%,  rgb(var(--lg-accent-rgb) / 0.06), transparent 70%),
+    var(--lg-bg) !important;
+}
+
+
+/* =====================================================================
+   3. HEADER — floating glass bar + segmented glass tabs
+   ===================================================================== */
+
+/* ---- 3a. MODERN LAYOUT (Jellyfin 12 default) -------------------------
+   The bar itself turns invisible; each toolbar row inside it becomes a
+   floating glass capsule. The admin Dashboard keeps a normal bar. */
+
+body:not(.dashboardDocument):not(:has(#videoOsdPage:not(.hide))) .MuiAppBar-root {
+  /* no dark strip (it looked dirty on bright artwork); the gap above
+     the capsule is frosted by ::before instead, see below */
+  background: none !important;
+  box-shadow: none !important;
+  border: 0 !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  box-sizing: border-box !important;
+  padding: 8px 14px 2px;
+  gap: 6px;
+  pointer-events: none;                 /* gaps around the capsule stay clickable */
+}
+body:not(.dashboardDocument):not(:has(#videoOsdPage:not(.hide))) .MuiAppBar-root > * {
+  pointer-events: auto;
+}
+/* frosted (not darkened) strip above the capsule: content scrolling
+   underneath turns into a soft blur instead of peeking out sharp */
+body:not(.dashboardDocument):not(:has(#videoOsdPage:not(.hide))) .MuiAppBar-root::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 40px;
+  z-index: -1;
+  pointer-events: none;
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  -webkit-mask-image: linear-gradient(180deg, #000 45%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 45%, transparent 100%);
+}
+/* over artwork (movie/show pages) the capsule gets a bit more tint so the
+   links stay readable on very bright images */
+body:has(#itemDetailPage:not(.hide)):not(.dashboardDocument) .MuiAppBar-root > .MuiToolbar-root:first-child {
+  background-color: rgba(14, 17, 23, 0.52);
+}
+body:has(#itemDetailPage:not(.hide)):not(.dashboardDocument) .MuiAppBar-root .MuiToolbar-root .MuiButton-root,
+body:has(#itemDetailPage:not(.hide)):not(.dashboardDocument) .MuiAppBar-root .MuiIconButton-root {
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+body:not(.dashboardDocument):not(:has(#videoOsdPage:not(.hide))) .MuiAppBar-root > .MuiToolbar-root {
+  min-height: 44px !important;
+  padding: 3px 6px 3px 10px !important;
+  gap: 2px;
+  border-radius: 22px;
+  background-color: rgba(16, 19, 26, 0.30);
+  background-image: linear-gradient(145deg, rgba(255, 255, 255, 0.09) 0%, rgba(255, 255, 255, 0.02) 50%, rgba(255, 255, 255, 0.05) 100%);
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.20), 0 6px 22px rgba(0, 0, 0, 0.28);
+}
+
+/* second row on library pages ("Shows ▾  3 … Play All, shuffle, filter, sort")
+   → a quiet, borderless strip instead of a second big capsule */
+body:not(.dashboardDocument):not(:has(#videoOsdPage:not(.hide))) .MuiAppBar-root > .MuiToolbar-root + .MuiToolbar-root {
+  min-height: 38px !important;
+  padding: 0 8px 0 10px !important;
+  border-radius: 16px;
+  background-color: rgba(16, 19, 26, 0.22);
+  background-image: none;
+  border-color: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  backdrop-filter: blur(18px) saturate(150%);
+}
+/* "Shows ▾" view switcher: normal text size instead of a big heading */
+body:not(.dashboardDocument) .MuiAppBar-root > .MuiToolbar-root + .MuiToolbar-root > .MuiButton-root {
+  font-size: 0.95rem !important;
+  font-weight: 600;
+  padding: 2px 10px;
+}
+/* item count "3" */
+body:not(.dashboardDocument) .MuiAppBar-root > .MuiToolbar-root + .MuiToolbar-root .MuiChip-root {
+  height: 22px;
+  font-size: 0.75rem;
+  background-color: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+}
+/* Play All / Shuffle: no bright blue block, just quiet glass */
+body:not(.dashboardDocument) .MuiAppBar-root > .MuiToolbar-root + .MuiToolbar-root .MuiButtonGroup-root {
+  box-shadow: none;
+  border-radius: var(--lg-pill);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+body:not(.dashboardDocument) .MuiAppBar-root > .MuiToolbar-root + .MuiToolbar-root .MuiButtonGroup-root .MuiButton-contained {
+  margin: 0;
+  border-radius: 0;
+  padding: 3px 12px;
+  min-height: 0;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.9);
+  background-color: rgba(255, 255, 255, 0.07);
+  box-shadow: none;
+  border: 0;
+  border-right: 1px solid rgba(255, 255, 255, 0.10) !important;
+}
+body:not(.dashboardDocument) .MuiAppBar-root > .MuiToolbar-root + .MuiToolbar-root .MuiButtonGroup-root .MuiButton-contained:last-child {
+  border-right: 0 !important;
+}
+body:not(.dashboardDocument) .MuiAppBar-root > .MuiToolbar-root + .MuiToolbar-root .MuiButtonGroup-root .MuiButton-contained:hover {
+  color: #fff;
+  background-color: var(--lg-accent-soft);
+}
+/* filter / sort / view / paging icons: a bit smaller and softer */
+body:not(.dashboardDocument) .MuiAppBar-root > .MuiToolbar-root + .MuiToolbar-root .MuiIconButton-root,
+body:not(.dashboardDocument) .MuiAppBar-root > .MuiToolbar-root + .MuiToolbar-root .MuiButtonGroup-root:not(.MuiButtonGroup-contained) .MuiButton-root {
+  color: rgba(255, 255, 255, 0.72);
+}
+body:not(.dashboardDocument) .MuiAppBar-root > .MuiToolbar-root + .MuiToolbar-root .MuiSvgIcon-root {
+  font-size: 19px;
+}
+
+/* library links (Favorites, Anime, Movies, Shows …) → glass pills */
+body:not(.dashboardDocument) .MuiAppBar-root .MuiToolbar-root .MuiButton-root {
+  border-radius: var(--lg-pill);
+  padding: 3px 11px;
+  min-height: 0;
+  margin: 0 1px;
+  font-size: 0.84rem;
+  line-height: 1.6;
+  text-transform: none;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: rgba(255, 255, 255, 0.82);
+  border: 1px solid transparent;
+  transition: background-color 0.25s var(--lg-ease), color 0.25s var(--lg-ease),
+              border-color 0.25s var(--lg-ease), box-shadow 0.25s var(--lg-ease);
+}
+body:not(.dashboardDocument) .MuiAppBar-root .MuiToolbar-root .MuiButton-root:hover {
+  color: #fff;
+  background-color: rgba(255, 255, 255, 0.08);
+}
+/* the library you're in → raised glass lens */
+body:not(.dashboardDocument) .MuiAppBar-root .MuiToolbar-root .MuiButton-textPrimary {
+  color: #fff;
+  background-color: rgba(255, 255, 255, 0.13);
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.02));
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 4px 14px rgba(0, 0, 0, 0.30);
+}
+body:not(.dashboardDocument) .MuiAppBar-root .MuiToolbar-root .MuiButton-textPrimary .MuiButton-startIcon {
+  color: var(--lg-accent);
+}
+body:not(.dashboardDocument) .MuiAppBar-root .MuiButton-startIcon {
+  margin-right: 6px;
+}
+body:not(.dashboardDocument) .MuiAppBar-root .MuiButton-startIcon > *:first-child,
+body:not(.dashboardDocument) .MuiAppBar-root .MuiButton-startIcon .material-icons {
+  font-size: 17px !important;
+}
+/* server logo + name on the left */
+body:not(.dashboardDocument) .MuiAppBar-root .MuiToolbar-root .MuiButton-root img {
+  max-height: 22px;
+}
+
+/* round icon buttons (SyncPlay, cast, search, menu, back) */
+body:not(.dashboardDocument) .MuiAppBar-root .MuiIconButton-root {
+  padding: 6px;
+  margin: 0 1px;
+  border: 1px solid transparent;
+  transition: background-color 0.25s var(--lg-ease), border-color 0.25s var(--lg-ease);
+}
+body:not(.dashboardDocument) .MuiAppBar-root .MuiIconButton-root:hover {
+  background-color: rgba(255, 255, 255, 0.10);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+body:not(.dashboardDocument) .MuiAppBar-root .MuiIconButton-root .MuiSvgIcon-root,
+body:not(.dashboardDocument) .MuiAppBar-root .MuiIconButton-root .material-icons {
+  font-size: 20px;
+}
+body:not(.dashboardDocument) .MuiAppBar-root .MuiAvatar-root {
+  width: 30px !important;
+  height: 30px !important;
+  font-size: 0.85rem;
+}
+
+/* breathing room between the floating bar and page content
+   (modern layout only — the classic layout already has its own) */
+body:not(.dashboardDocument):has(.MuiAppBar-root) .libraryPage:not(.itemDetailPage):not(#videoOsdPage):not(#nowPlayingPage) {
+  padding-top: 1.6em !important;
+}
+
+/* profile picture gets a glass ring */
+.MuiAppBar-root .MuiAvatar-root {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.22), 0 4px 12px rgba(0, 0, 0, 0.4);
+  transition: box-shadow 0.25s var(--lg-ease);
+}
+.MuiAppBar-root .MuiIconButton-root:hover .MuiAvatar-root {
+  box-shadow: 0 0 0 2px var(--lg-accent), 0 0 18px var(--lg-accent-glow);
+}
+
+/* library sub-tabs (Movies / Suggestions / Genres …) → segmented glass */
+body:not(.dashboardDocument) .MuiAppBar-root .MuiTabs-indicator {
+  display: none;
+}
+body:not(.dashboardDocument) .MuiAppBar-root .MuiTab-root {
+  min-height: 36px;
+  margin: 0 2px;
+  padding: 6px 16px;
+  border-radius: var(--lg-pill);
+  text-transform: none;
+  font-weight: 500;
+  transition: background-color 0.25s var(--lg-ease), color 0.25s var(--lg-ease);
+}
+body:not(.dashboardDocument) .MuiAppBar-root .MuiTab-root:hover {
+  background-color: rgba(255, 255, 255, 0.07);
+}
+body:not(.dashboardDocument) .MuiAppBar-root .MuiTab-root.Mui-selected {
+  color: #fff;
+  background-color: rgba(255, 255, 255, 0.13);
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.02));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.32);
+}
+
+/* Dashboard bar: plain glass, full width */
+body.dashboardDocument .MuiAppBar-root {
+  background-color: rgba(12, 14, 20, 0.55) !important;
+  background-image: var(--lg-sheen) !important;
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+  border-bottom: 1px solid var(--lg-edge);
+  box-shadow: none !important;
+}
+
+/* ---- 3b. MUI MENUS: profile menu, "More" libraries, etc. -------------- */
+
+body:not(:has(#videoOsdPage:not(.hide))) .MuiMenu-paper,
+body:not(:has(#videoOsdPage:not(.hide))) .MuiPopover-paper {
+  margin-top: 8px;
+  min-width: 220px;
+  padding: 6px 0;
+  border-radius: var(--lg-r-lg) !important;
+  background-color: var(--lg-tint-strong) !important;
+  background-image: var(--lg-sheen) !important;   /* replaces MUI's grey elevation overlay */
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+  border: 1px solid var(--lg-edge);
+  box-shadow: var(--lg-highlight), 0 24px 60px rgba(0, 0, 0, 0.55) !important;
+}
+body:not(:has(#videoOsdPage:not(.hide))) .MuiMenu-list {
+  padding: 0 !important;
+}
+body:not(:has(#videoOsdPage:not(.hide))) .MuiMenu-paper .MuiMenuItem-root {
+  margin: 2px 6px;
+  padding: 9px 14px;
+  min-height: 0;
+  border-radius: var(--lg-r-sm);
+  font-size: 0.95rem;
+  transition: background-color 0.18s var(--lg-ease), color 0.18s var(--lg-ease);
+}
+body:not(:has(#videoOsdPage:not(.hide))) .MuiMenu-paper .MuiMenuItem-root:hover,
+body:not(:has(#videoOsdPage:not(.hide))) .MuiMenu-paper .MuiMenuItem-root.Mui-focusVisible {
+  background-color: rgba(255, 255, 255, 0.09);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+body:not(:has(#videoOsdPage:not(.hide))) .MuiMenu-paper .MuiMenuItem-root.Mui-selected {
+  background-color: var(--lg-accent-soft);
+  color: #fff;
+}
+body:not(:has(#videoOsdPage:not(.hide))) .MuiMenu-paper .MuiListItemIcon-root {
+  min-width: 34px;
+  color: var(--lg-text-dim);
+  transition: color 0.18s var(--lg-ease);
+}
+body:not(:has(#videoOsdPage:not(.hide))) .MuiMenu-paper .MuiMenuItem-root:hover .MuiListItemIcon-root {
+  color: var(--lg-accent);
+}
+body:not(:has(#videoOsdPage:not(.hide))) .MuiMenu-paper .MuiDivider-root {
+  margin: 6px 14px !important;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* hover tooltips */
+.MuiTooltip-tooltip {
+  border-radius: var(--lg-pill) !important;
+  padding: 5px 11px !important;
+  background-color: rgba(20, 24, 32, 0.80) !important;
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--lg-edge);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 6px 18px rgba(0, 0, 0, 0.4);
+}
+
+/* ---- 3c. CLASSIC LAYOUT header ---------------------------------------- */
+
+.skinHeader:not(.osdHeader) {
+  background-color: rgba(12, 14, 20, 0.38) !important;
+  background-image: var(--lg-sheen) !important;
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+  border-bottom: 1px solid var(--lg-edge);
+  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.04), 0 6px 30px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* tab strip becomes one glass capsule */
+.skinHeader:not(.osdHeader) .emby-tabs-slider {
+  display: inline-flex;
+  gap: 2px;
+  padding: 4px;
+  margin: 0.4em 0;
+  border-radius: var(--lg-pill);
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10);
+}
+.skinHeader:not(.osdHeader) .emby-tab-button {
+  border-radius: var(--lg-pill);
+  padding: 0.5em 1.15em;
+  margin: 0;
+  transition: background-color 0.25s var(--lg-ease), color 0.25s var(--lg-ease), box-shadow 0.25s var(--lg-ease);
+}
+.skinHeader:not(.osdHeader) .emby-tab-button:hover {
+  background-color: rgba(255, 255, 255, 0.07);
+}
+.skinHeader:not(.osdHeader) .emby-tab-button-active {
+  color: #fff !important;
+  background-color: rgba(255, 255, 255, 0.14);
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.02));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 4px 14px rgba(0, 0, 0, 0.30);
+}
+.skinHeader:not(.osdHeader) .emby-tab-button-active::after {
+  display: none;
+}
+
+.skinHeader:not(.osdHeader) .paper-icon-button-light {
+  border-radius: 50%;
+  transition: background-color 0.2s var(--lg-ease);
+}
+.skinHeader:not(.osdHeader) .paper-icon-button-light:hover {
+  background-color: rgba(255, 255, 255, 0.10);
+}
+
+
+/* =====================================================================
+   4. SIDE MENU
+   ===================================================================== */
+
+.mainDrawer,
+.MuiDrawer-paper {
+  background-color: var(--lg-tint-strong) !important;
+  background-image: var(--lg-sheen) !important;
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+  border-right: 1px solid var(--lg-edge) !important;
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.04), 10px 0 40px rgba(0, 0, 0, 0.35) !important;
+}
+.mainDrawer .navMenuOption,
+.MuiDrawer-paper .MuiListItemButton-root {
+  border-radius: var(--lg-r-sm);
+  margin: 2px 10px;
+  transition: background-color 0.2s var(--lg-ease);
+}
+.mainDrawer .navMenuOption:hover,
+.MuiDrawer-paper .MuiListItemButton-root:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+.mainDrawer .navMenuOption-selected,
+.MuiDrawer-paper .MuiListItemButton-root.Mui-selected {
+  background-color: rgba(255, 255, 255, 0.10) !important;
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.01));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  color: #fff !important;
+}
+.mainDrawer .navMenuOption-selected .navMenuOptionIcon,
+.MuiDrawer-paper .Mui-selected .MuiListItemIcon-root {
+  color: var(--lg-accent) !important;
+}
+.mainDrawer .sidebarDivider,
+.MuiDrawer-paper .MuiDivider-root {
+  border-color: rgba(255, 255, 255, 0.07) !important;
+  background: rgba(255, 255, 255, 0.07) !important;
+  margin: 0.6em 1.2em;
+}
+.mainDrawer .sidebarHeader {
+  color: var(--lg-text-dim);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.72em;
+}
+
+
+/* =====================================================================
+   5. POSTERS & CARDS — glass rim, soft depth, lift + glow on hover
+   ===================================================================== */
+
+.page:not(#videoOsdPage):not(#nowPlayingPage) .cardScalable {
+  border-radius: var(--lg-r);
+  overflow: hidden;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.38);
+  outline: 1px solid rgba(255, 255, 255, 0.10);   /* glass rim drawn over the art */
+  outline-offset: -1px;
+  transition: transform 0.35s var(--lg-ease), box-shadow 0.35s var(--lg-ease), outline-color 0.35s var(--lg-ease);
+}
+.page:not(#videoOsdPage):not(#nowPlayingPage) .cardImageContainer,
+.page:not(#videoOsdPage):not(#nowPlayingPage) .cardContent,
+.page:not(#videoOsdPage):not(#nowPlayingPage) .cardOverlayContainer,
+.page:not(#videoOsdPage):not(#nowPlayingPage) .cardPadder {
+  border-radius: var(--lg-r);
+}
+
+/* --- hover: the poster lifts toward you (slight 3D tilt) and casts an
+   "aura" — a soft glow in the poster's own colours behind it ---
+   Mouse only; phones/TVs keep the calm version. */
+@media (hover: hover) {
+  /* let the glow spill outside the card (Jellyfin clips cards by default) */
+  .page:not(#videoOsdPage):not(#nowPlayingPage) .card {
+    contain: layout style !important;
+  }
+  .page:not(#videoOsdPage):not(#nowPlayingPage) .cardScalable {
+    overflow: visible;
+    isolation: isolate;                     /* keeps the glow behind the poster */
+    transform-origin: 50% 100%;
+    transition: transform 0.45s var(--lg-ease), box-shadow 0.45s var(--lg-ease), outline-color 0.35s var(--lg-ease);
+  }
+  /* no containment here: "contain: layout" would make the poster its own
+     layer and pull the glow IN FRONT of the image (= blurry poster) */
+  .page:not(#videoOsdPage):not(#nowPlayingPage) .cardScalable > .cardImageContainer {
+    contain: none !important;
+    overflow: visible !important;
+  }
+  /* horizontal rows (home page, cast …): room above/below so the lift and
+     the glow aren't cut off by the row's scroll area */
+  .page:not(#videoOsdPage):not(#nowPlayingPage) .emby-scroller.scrollX,
+  .page:not(#videoOsdPage):not(#nowPlayingPage) .emby-scroller {
+    padding-top: 0.9em !important;
+    padding-bottom: 1.6em !important;
+    margin-bottom: -0.6em !important;
+  }
+  .page:not(#videoOsdPage):not(#nowPlayingPage) .cardScalable .blurhash-canvas {
+    border-radius: var(--lg-r);
+  }
+
+  /* the aura: a blurred, saturated copy of the poster itself */
+  .page:not(#videoOsdPage):not(#nowPlayingPage) .cardScalable > .cardImageContainer::before {
+    content: "";
+    position: absolute;
+    inset: 8% 6% -2%;
+    z-index: -1;
+    border-radius: inherit;
+    background-image: inherit;
+    background-size: cover;
+    background-position: center;
+    filter: blur(26px) saturate(1.9) brightness(1.15);
+    opacity: 0;
+    transform: translateY(6%) scale(0.95);
+    transition: opacity 0.45s var(--lg-ease), transform 0.45s var(--lg-ease);
+    pointer-events: none;
+  }
+  .page:not(#videoOsdPage):not(#nowPlayingPage) .cardBox:hover .cardScalable > .cardImageContainer::before,
+  .page:not(#videoOsdPage):not(#nowPlayingPage) .card:focus-visible .cardScalable > .cardImageContainer::before {
+    opacity: 0.9;
+    transform: translateY(9%) scale(1.12);
+  }
+
+  /* the lift */
+  .page:not(#videoOsdPage):not(#nowPlayingPage) .cardBox:hover .cardScalable,
+  .page:not(#videoOsdPage):not(#nowPlayingPage) .card:focus-visible .cardScalable {
+    transform: perspective(900px) rotateX(5deg) translateY(-10px) scale(1.06);
+    outline-color: rgba(255, 255, 255, 0.32);
+    box-shadow: 0 26px 46px -12px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  }
+}
+
+/* hover overlay: no blur any more — the poster stays sharp; just a light
+   glass glare from the top and a soft shade at the bottom for the buttons */
+.page:not(#videoOsdPage):not(#nowPlayingPage) .cardOverlayContainer {
+  background:
+    linear-gradient(155deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.05) 28%, rgba(255, 255, 255, 0) 45%),
+    linear-gradient(0deg, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0) 38%);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+/* card play / menu buttons: the button itself stays invisible (no second
+   ring); only Jellyfin's own icon circle is styled, as one glass bead */
+.page:not(#videoOsdPage):not(#nowPlayingPage) .cardOverlayButton,
+.page:not(#videoOsdPage):not(#nowPlayingPage) .cardOverlayButton:hover {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.page:not(#videoOsdPage):not(#nowPlayingPage) .cardOverlayButton:not(.cardOverlayButton-hover) .cardOverlayButtonIcon:not(.cardOverlayButtonIcon-hover) {
+  color: #fff;
+  background-color: rgba(12, 14, 20, 0.55) !important;   /* no blur on posters */
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22), 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+/* framed "visual" cards */
+.page:not(#videoOsdPage):not(#nowPlayingPage) .visualCardBox {
+  background-color: var(--lg-tint);
+  background-image: var(--lg-sheen);
+  border: 1px solid var(--lg-edge);
+  border-radius: var(--lg-r);
+  box-shadow: var(--lg-highlight);
+  overflow: hidden;
+}
+
+.page:not(#videoOsdPage):not(#nowPlayingPage) .cardText {
+  padding-left: 0.2em;
+}
+.page:not(#videoOsdPage):not(#nowPlayingPage) .cardText-secondary {
+  color: var(--lg-text-dim);
+}
+
+/* badges (unwatched count "99+", watched checkmark) → small frosted-glass
+   chips; tucked in a bit so they sit nicely inside the rounded corners */
+.page:not(#videoOsdPage):not(#nowPlayingPage) .cardIndicators {
+  top: 0.5em;
+  right: 0.5em;
+  gap: 0.3em;
+}
+.page:not(#videoOsdPage):not(#nowPlayingPage) .countIndicator,
+.page:not(#videoOsdPage):not(#nowPlayingPage) .playedIndicator {
+  width: auto;
+  min-width: 1.85em;
+  height: 1.85em;
+  margin: 0 !important;
+  padding: 0 0.5em;
+  box-sizing: border-box;
+  border-radius: var(--lg-pill);
+  color: #fff;
+  background: rgba(12, 14, 20, 0.50);
+  -webkit-backdrop-filter: blur(10px) saturate(170%);
+  backdrop-filter: blur(10px) saturate(170%);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 3px 10px rgba(0, 0, 0, 0.35);
+}
+/* unwatched count: compact number with a small blue dot in front */
+.page:not(#videoOsdPage):not(#nowPlayingPage) .countIndicator {
+  gap: 0.35em;
+  font-size: 0.78em;
+  height: 2.37em;                       /* same visual height as the checkmark bead */
+  min-width: 2.37em;
+  padding: 0 0.7em 0 0.6em;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+}
+.page:not(#videoOsdPage):not(#nowPlayingPage) .countIndicator::before {
+  content: "";
+  width: 0.45em;
+  height: 0.45em;
+  border-radius: 50%;
+  background: var(--lg-accent);
+  box-shadow: 0 0 6px var(--lg-accent-glow);
+}
+/* watched: round glass bead with a blue checkmark */
+.page:not(#videoOsdPage):not(#nowPlayingPage) .playedIndicator {
+  width: 1.85em;
+  padding: 0;
+}
+/* Jellyfin 12 draws the check as an SVG icon: it needs an explicit size,
+   otherwise it collapses to nothing inside the smaller bead */
+.page:not(#videoOsdPage):not(#nowPlayingPage) .playedIndicator svg.indicatorIcon {
+  width: 1.3em !important;
+  height: 1.3em !important;
+  font-size: inherit !important;
+  flex-shrink: 0;
+  fill: currentColor;
+  color: var(--lg-accent-light);
+  filter: drop-shadow(0 0 4px rgb(var(--lg-accent-rgb) / 0.55));
+}
+/* older pages still use the icon font version */
+.page:not(#videoOsdPage):not(#nowPlayingPage) .playedIndicator span.indicatorIcon {
+  font-size: 1.3em;
+  color: var(--lg-accent-light);
+  text-shadow: 0 0 8px rgb(var(--lg-accent-rgb) / 0.5);
+}
+
+/* resume bars on cards (not the player's seek bar) */
+.page:not(#videoOsdPage):not(#nowPlayingPage) .itemProgressBar {
+  height: 5px;
+  border-radius: var(--lg-pill);
+  overflow: hidden;
+  margin: 0 0.6em 0.55em;
+  background: rgba(255, 255, 255, 0.24);
+}
+.page:not(#videoOsdPage):not(#nowPlayingPage) .itemProgressBarForeground {
+  background: linear-gradient(90deg, var(--lg-accent), var(--lg-accent-light));
+  border-radius: var(--lg-pill);
+  box-shadow: 0 0 10px var(--lg-accent-glow);
+}
+
+
+/* =====================================================================
+   6. SECTION TITLES
+   ===================================================================== */
+
+.page:not(#videoOsdPage):not(#nowPlayingPage) .sectionTitle {
+  font-weight: 650;
+  letter-spacing: -0.015em;
+}
+.page:not(#videoOsdPage):not(#nowPlayingPage) .homeSectionsContainer .verticalSection {
+  margin-bottom: 1.8em;
+}
+
+/* home page "My Media": the library tiles already show their name in the
+   artwork, so the "My Media" heading and the labels under the tiles go.
+   (Recognised by its tiles being library folders, wherever the section
+   sits in your home layout.) */
+.homeSectionsContainer .verticalSection:has(.card[data-collectiontype]) > .sectionTitle,
+.homeSectionsContainer .verticalSection:has(.card[data-type="CollectionFolder"]) > .sectionTitle {
+  display: none !important;
+}
+.homeSectionsContainer .card[data-collectiontype] .cardFooter,
+.homeSectionsContainer .card[data-type="CollectionFolder"] .cardFooter,
+.homeSectionsContainer .card[data-collectiontype] .cardText {
+  display: none !important;
+}
+
+
+/* =====================================================================
+   7. BUTTONS — glass pills, accent "liquid" primary
+   ===================================================================== */
+
+.page:not(#videoOsdPage):not(#nowPlayingPage) .emby-button.raised,
+.page:not(#videoOsdPage):not(#nowPlayingPage) .emby-button.button-submit,
+.page:not(#videoOsdPage):not(#nowPlayingPage) .emby-button.button-cancel {
+  border-radius: var(--lg-pill);
+  padding: 0.78em 1.5em;
+  border: 1px solid var(--lg-edge);
+  transition: transform 0.15s var(--lg-ease), box-shadow 0.25s var(--lg-ease), background-color 0.25s var(--lg-ease);
+}
+.page:not(#videoOsdPage):not(#nowPlayingPage) .emby-button.raised,
+.page:not(#videoOsdPage):not(#nowPlayingPage) .emby-button.button-cancel {
+  background-color: rgba(255, 255, 255, 0.08);
+  background-image: var(--lg-sheen);
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+  box-shadow: var(--lg-highlight);
+}
+.page:not(#videoOsdPage):not(#nowPlayingPage) .emby-button.button-submit {
+  color: var(--lg-on-accent);                       /* dark text: white is unreadable on mint */
+  background: linear-gradient(170deg, var(--lg-accent-light) 0%, var(--lg-accent) 55%, var(--lg-accent-dark) 100%);
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 8px 24px var(--lg-accent-glow);
+}
+.page:not(#videoOsdPage):not(#nowPlayingPage) .emby-button.raised:active,
+.page:not(#videoOsdPage):not(#nowPlayingPage) .emby-button.button-submit:active,
+.page:not(#videoOsdPage):not(#nowPlayingPage) .emby-button.button-cancel:active {
+  transform: scale(0.96);
+}
+
+.page:not(#videoOsdPage):not(#nowPlayingPage) .paper-icon-button-light {
+  border-radius: 50%;
+  transition: background-color 0.2s var(--lg-ease);
+}
+.page:not(#videoOsdPage):not(#nowPlayingPage) .paper-icon-button-light:hover {
+  background-color: rgba(255, 255, 255, 0.10);
+}
+
+
+/* =====================================================================
+   8. INPUTS & SELECTS — recessed glass
+   ===================================================================== */
+
+.page:not(#videoOsdPage):not(#nowPlayingPage) .emby-input,
+.page:not(#videoOsdPage):not(#nowPlayingPage) .emby-select-withcolor,
+.page:not(#videoOsdPage):not(#nowPlayingPage) .emby-textarea {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: var(--lg-r-sm);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.25);
+  transition: border-color 0.2s var(--lg-ease), box-shadow 0.2s var(--lg-ease), background-color 0.2s var(--lg-ease);
+}
+.page:not(#videoOsdPage):not(#nowPlayingPage) .emby-input:focus,
+.page:not(#videoOsdPage):not(#nowPlayingPage) .emby-select-withcolor:focus,
+.page:not(#videoOsdPage):not(#nowPlayingPage) .emby-textarea:focus {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: var(--lg-accent);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.2), 0 0 0 3px var(--lg-accent-ring);
+  outline: none;
+}
+
+
+/* =====================================================================
+   9. LISTS & SETTINGS PAGES — glass panels
+   ===================================================================== */
+
+.page:not(#videoOsdPage):not(#nowPlayingPage) .paperList {
+  background-color: var(--lg-tint);
+  background-image: var(--lg-sheen);
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+  border: 1px solid var(--lg-edge);
+  border-radius: var(--lg-r);
+  box-shadow: var(--lg-highlight), var(--lg-drop);
+  overflow: hidden;
+}
+.page:not(#videoOsdPage):not(#nowPlayingPage) .listItem {
+  border-radius: var(--lg-r-sm);
+  transition: background-color 0.2s var(--lg-ease);
+}
+.page:not(#videoOsdPage):not(#nowPlayingPage) .listItemImage {
+  border-radius: var(--lg-r-sm);
+  overflow: hidden;
+}
+
+
+/* =====================================================================
+   10. MOVIE / EPISODE / SERIES PAGE
+   ===================================================================== */
+
+/* --- hero backdrop: taller, cinematic fade, darker left side for text --- */
+.layout-desktop #itemDetailPage .itemBackdrop {
+  height: 60vh;
+}
+/* --- desktop backdrop without the dark veil ---
+   On desktop Jellyfin doesn't draw the header image itself: it puts the
+   artwork behind the whole page and covers it with an 86 %-opaque dark
+   layer (that's the "darkening"). Mobile draws the image directly, which
+   is why it looks fine there. Here the veil is removed on detail pages
+   and only the content below the title bar gets a dark backing. */
+html:not(.layout-mobile):not(.layout-tv) body:has(#itemDetailPage:not(.hide)) .backgroundContainer.withBackdrop {
+  opacity: 0 !important;
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailPageWrapperContainer {
+  background: linear-gradient(180deg,
+    rgba(11, 13, 18, 0.55) 0,
+    rgba(11, 13, 18, 0.88) 9em,
+    rgba(11, 13, 18, 0.96) 22em,
+    rgba(11, 13, 18, 0.98) 100%);
+  min-height: calc(100vh - 10em);
+}
+
+/* artwork stays at full brightness; only a faint strip at the very top
+   so the floating header stays readable over bright images */
+#itemDetailPage .itemBackdrop::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 110px;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(8, 10, 14, 0.35), transparent);
+}
+
+/* --- the info ribbon becomes a sheet of clear glass over the artwork --- */
+html:not(.layout-tv) #itemDetailPage .detailRibbon {
+  background-color: rgba(14, 17, 23, 0.10) !important;
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.04) 40%, rgba(255, 255, 255, 0.02) 100%) !important;
+  -webkit-backdrop-filter: blur(26px) saturate(170%) brightness(1.05);
+  backdrop-filter: blur(26px) saturate(170%) brightness(1.05);
+  border-top: 1px solid rgba(255, 255, 255, 0.20);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+/* keep the text crisp on clear glass */
+#itemDetailPage .detailRibbon .itemMiscInfo,
+#itemDetailPage .detailRibbon h3.itemName {
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.45);
+}
+/* Fixed height that ends exactly where the floated poster starts.
+   If the ribbon grows past that point, the browser shoves the whole
+   ribbon sideways to dodge the poster — so it must stay fixed. */
+.layout-desktop #itemDetailPage .detailRibbon {
+  box-sizing: border-box;
+  height: 10em;
+  min-height: 0;
+  margin-top: -10em;
+  padding-top: 0;
+  padding-bottom: 0;
+  overflow: visible;
+  align-items: center;
+}
+
+/* center the title block vertically: drop Jellyfin's built-in bottom
+   margins (incl. the one under the often-empty second info row) */
+.layout-desktop #itemDetailPage .detailRibbon .infoWrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-self: stretch;
+}
+#itemDetailPage .detailRibbon .itemMiscInfo {
+  margin-bottom: 0 !important;
+}
+#itemDetailPage .detailRibbon .itemMiscInfo:empty {
+  display: none;
+}
+#itemDetailPage .detailRibbon .itemMiscInfo-secondary:not(:empty) {
+  margin-top: 0.45em;
+}
+#itemDetailPage .detailRibbon .nameContainer > :first-child {
+  margin-top: 0 !important;
+}
+#itemDetailPage .detailRibbon .nameContainer > :last-child {
+  margin-bottom: 0 !important;
+}
+#itemDetailPage .detailRibbon .mainDetailButtons {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+/* --- poster: bigger corners, floating with depth --- */
+#itemDetailPage .detailImageContainer .cardScalable {
+  border-radius: var(--lg-r-lg);
+  outline: 1px solid rgba(255, 255, 255, 0.16);
+  outline-offset: -1px;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.60), 0 10px 24px rgba(0, 0, 0, 0.40);
+}
+#itemDetailPage .detailImageContainer .cardImageContainer,
+#itemDetailPage .detailImageContainer .cardPadder {
+  border-radius: var(--lg-r-lg);
+}
+@media (hover: hover) {
+  #itemDetailPage .detailImageContainer .cardBox:hover .cardScalable {
+    transform: translateY(-4px) scale(1.01);
+  }
+}
+
+/* --- titles --- */
+#itemDetailPage h1.itemName,
+#itemDetailPage h1.parentName {
+  font-size: clamp(1.7em, 2.6vw, 2.7em);
+  font-weight: 750;
+  letter-spacing: -0.028em;
+  line-height: 1.1;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.45);
+}
+#itemDetailPage h3.itemName.subtitle {           /* "S1:E3 - Episode name" */
+  font-weight: 500;
+  font-size: 1.15em;
+  margin-top: 0.3em;
+  color: rgba(255, 255, 255, 0.86);
+}
+#itemDetailPage h1.parentName a,
+#itemDetailPage h3.itemName.subtitle a {
+  text-decoration: none;
+  transition: color 0.2s var(--lg-ease);
+}
+#itemDetailPage h1.parentName a:hover,
+#itemDetailPage h3.itemName.subtitle a:hover {
+  color: var(--lg-accent);
+}
+#itemDetailPage .itemName.originalTitle {
+  color: var(--lg-text-dim);
+  font-weight: 400;
+}
+
+/* --- year / runtime / rating become glass chips --- */
+#itemDetailPage .itemMiscInfo-primary {
+  gap: 0.4em;
+  margin-top: 0.45em;
+}
+#itemDetailPage .itemMiscInfo-primary > .mediaInfoItem:not(.mediaInfoCriticRating) {
+  margin: 0 !important;
+  padding: 0.28em 0.8em;
+  border-radius: var(--lg-pill);
+  font-size: 0.86em;
+  background-color: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  white-space: nowrap;
+}
+#itemDetailPage .itemMiscInfo-primary > .mediaInfoCriticRating {
+  margin: 0 0.3em !important;
+}
+#itemDetailPage .itemMiscInfo-primary .starIcon {
+  color: #f5c518;
+}
+#itemDetailPage .itemMiscInfo-secondary {
+  color: var(--lg-text-dim);
+  font-size: 0.92em;
+}
+
+/* --- action buttons: glass orbs, Play is a glowing liquid drop --- */
+#itemDetailPage .mainDetailButtons {
+  gap: 0.6em;
+  flex-wrap: wrap;
+}
+#itemDetailPage .detailButton {
+  padding: 0.85em !important;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.08);
+  background-image: linear-gradient(160deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.02) 55%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.32), 0 6px 18px rgba(0, 0, 0, 0.30);
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+  transition: transform 0.25s var(--lg-ease), background-color 0.25s var(--lg-ease), box-shadow 0.25s var(--lg-ease);
+}
+#itemDetailPage .detailButton:hover {
+  background-color: rgba(255, 255, 255, 0.16);
+  transform: translateY(-2px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.40), 0 10px 24px rgba(0, 0, 0, 0.38);
+}
+#itemDetailPage .detailButton:active {
+  transform: scale(0.94);
+}
+#itemDetailPage .detailButton.btnPlay {
+  padding: 1.05em !important;
+  color: var(--lg-on-accent);
+  background-color: var(--lg-accent);
+  background-image: radial-gradient(120% 120% at 30% 20%, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.08) 38%, rgba(0, 0, 0, 0.12) 100%);
+  border-color: rgba(255, 255, 255, 0.30);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 10px 30px var(--lg-accent-glow);
+}
+#itemDetailPage .detailButton.btnPlay:hover {
+  background-color: var(--lg-accent-hover);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 14px 38px rgb(var(--lg-accent-rgb) / 0.6);
+}
+
+/* --- audio / subtitle / version selectors → a row of glass pills --- */
+#itemDetailPage .trackSelections {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5em;
+  max-width: none;
+  margin: 0.2em 0 1.1em;
+}
+#itemDetailPage .trackSelections .selectContainer {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  margin: 0 !important;
+  padding: 0.3em 0.4em 0.3em 1em;
+  border-radius: var(--lg-pill);
+  background-color: rgba(255, 255, 255, 0.07);
+  background-image: linear-gradient(160deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0) 60%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  transition: background-color 0.2s var(--lg-ease), border-color 0.2s var(--lg-ease), box-shadow 0.2s var(--lg-ease);
+}
+#itemDetailPage .trackSelections .selectContainer.hide {
+  display: none !important;
+}
+#itemDetailPage .trackSelections .selectContainer:hover {
+  background-color: rgba(255, 255, 255, 0.11);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+#itemDetailPage .trackSelections .selectContainer:focus-within {
+  border-color: var(--lg-accent);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 0 0 3px var(--lg-accent-ring);
+}
+#itemDetailPage .trackSelections .selectLabel {
+  flex: 0 0 auto !important;
+  margin: 0 0.6em 0 0 !important;
+  line-height: 1.4 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.68rem;
+  color: var(--lg-text-dim);
+}
+/* the select itself sits flush inside the pill */
+#itemDetailPage .trackSelections .detailTrackSelect,
+#itemDetailPage .trackSelections .detailTrackSelect:focus {
+  width: auto !important;
+  max-width: 24em;
+  flex: 0 1 auto;
+  padding: 0.15em 1.9em 0.15em 0 !important;
+  font-size: 0.92rem !important;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  outline: none;
+}
+#itemDetailPage .trackSelections .detailTrackSelect[disabled] {
+  padding-right: 0.6em !important;
+  cursor: default;
+}
+#itemDetailPage .trackSelections .selectArrowContainer {
+  top: 50% !important;
+  right: 0.7em !important;
+  transform: translateY(-50%);
+  line-height: 0;
+}
+#itemDetailPage .trackSelections .selectArrow {
+  font-size: 1.2em !important;
+  opacity: 0.7;
+}
+/* native dropdown list: dark instead of white (fallback for browsers
+   without customizable selects, e.g. Firefox / Safari) */
+#itemDetailPage .trackSelections option {
+  background: #1a1e27;
+  color: #fff;
+}
+
+/* Version / Video / Audio / Subtitles dropdown lists → glass panel.
+   Uses the browser's "customizable select" (Chrome, Edge, Opera …);
+   other browsers simply keep the dark native list above. */
+@supports (appearance: base-select) {
+  #itemDetailPage .trackSelections .detailTrackSelect,
+  #itemDetailPage .trackSelections .detailTrackSelect::picker(select) {
+    appearance: base-select;
+  }
+  /* the pill keeps its look: no extra browser arrow (Jellyfin has its own) */
+  #itemDetailPage .trackSelections .detailTrackSelect::picker-icon {
+    display: none;
+  }
+  #itemDetailPage .trackSelections .detailTrackSelect {
+    min-height: 0;
+    color: inherit;
+  }
+
+  /* the open list */
+  #itemDetailPage .trackSelections .detailTrackSelect::picker(select) {
+    margin-top: 8px;
+    padding: 6px;
+    min-width: anchor-size(width);
+    max-height: min(60vh, 26em);
+    border-radius: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background-color: rgba(14, 16, 22, 0.78);
+    background-image: linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.01) 50%);
+    -webkit-backdrop-filter: blur(26px) saturate(170%);
+    backdrop-filter: blur(26px) saturate(170%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 22px 56px rgba(0, 0, 0, 0.55);
+    color: #fff;
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.18s ease, transform 0.22s var(--lg-ease), overlay 0.22s allow-discrete, display 0.22s allow-discrete;
+  }
+  @starting-style {
+    #itemDetailPage .trackSelections .detailTrackSelect:open::picker(select) {
+      opacity: 0;
+      transform: translateY(-6px);
+    }
+  }
+
+  /* entries */
+  #itemDetailPage .trackSelections .detailTrackSelect option {
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+    padding: 0.55em 0.9em 0.55em 0.75em;
+    border-radius: 11px;
+    font-size: 0.92rem;
+    white-space: nowrap;
+    color: rgba(255, 255, 255, 0.88);
+    background: transparent;
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+  #itemDetailPage .trackSelections .detailTrackSelect option:hover,
+  #itemDetailPage .trackSelections .detailTrackSelect option:focus-visible {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.09);
+    outline: none;
+  }
+  /* the current choice: soft green fill + green check */
+  #itemDetailPage .trackSelections .detailTrackSelect option:checked {
+    color: #fff;
+    font-weight: 600;
+    background: rgb(var(--lg-accent-rgb) / 0.16);
+  }
+  #itemDetailPage .trackSelections .detailTrackSelect option:checked:hover {
+    background: rgb(var(--lg-accent-rgb) / 0.24);
+  }
+  #itemDetailPage .trackSelections .detailTrackSelect option::checkmark {
+    order: -1;
+    color: var(--lg-accent);
+    font-weight: 700;
+  }
+}
+
+/* --- tagline + overview: easier to read --- */
+#itemDetailPage .tagline {
+  font-style: italic;
+  font-weight: 400;
+  font-size: 1.15em;
+  color: rgba(255, 255, 255, 0.78);
+  margin: 0.4em 0 0.6em;
+}
+#itemDetailPage .overview {
+  font-size: 1.04em;
+  line-height: 1.7;
+  max-width: 72ch;
+  color: rgba(255, 255, 255, 0.84);
+}
+#itemDetailPage .overview-expand {
+  color: var(--lg-accent);
+  font-weight: 600;
+}
+
+/* --- genres / director / writers / studios as glass chips --- */
+#itemDetailPage .itemDetailsGroup {
+  margin-top: 1.6em;
+}
+#itemDetailPage .detailsGroupItem {
+  align-items: baseline;
+  margin-bottom: 0.7em !important;
+}
+#itemDetailPage .detailsGroupItem .label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--lg-text-dim);
+  flex-basis: 8.5em;
+}
+#itemDetailPage .detailsGroupItem .focuscontainer-x {
+  font-size: 0;                         /* hides the ", " separators */
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+#itemDetailPage .detailsGroupItem .button-link {
+  font-size: 0.86rem;
+  padding: 0.32em 0.9em;
+  border-radius: var(--lg-pill);
+  background-color: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  text-decoration: none;
+  transition: background-color 0.2s var(--lg-ease), border-color 0.2s var(--lg-ease);
+}
+#itemDetailPage .detailsGroupItem .button-link:hover {
+  background-color: var(--lg-accent-soft);
+  border-color: var(--lg-accent-ring);
+}
+
+/* --- cast & crew: round portraits with a glass ring --- */
+#itemDetailPage .personCard .cardPadder {
+  padding-bottom: 100% !important;
+}
+#itemDetailPage .personCard .cardScalable,
+#itemDetailPage .personCard .cardImageContainer,
+#itemDetailPage .personCard .cardContent,
+#itemDetailPage .personCard .cardPadder,
+#itemDetailPage .personCard .cardOverlayContainer {
+  border-radius: 50%;
+}
+#itemDetailPage .personCard .cardScalable {
+  outline: 2px solid rgba(255, 255, 255, 0.14);
+  outline-offset: -2px;
+}
+#itemDetailPage .personCard .cardText {
+  text-align: center;
+  padding-left: 0;
+}
+
+/* --- episode list on season/series pages: glass rows --- */
+#itemDetailPage #childrenContent .listItem,
+#itemDetailPage #childrenCollapsible .listItem {
+  margin: 0 0 0.75em;
+  padding: 0.6em;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: var(--lg-r);
+  background-color: rgba(255, 255, 255, 0.035);
+  background-image: linear-gradient(160deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0) 50%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10);
+  transition: background-color 0.25s var(--lg-ease), border-color 0.25s var(--lg-ease), transform 0.25s var(--lg-ease);
+}
+#itemDetailPage #childrenContent .listItem:hover,
+#itemDetailPage #childrenCollapsible .listItem:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+#itemDetailPage #childrenContent .listItemImage,
+#itemDetailPage #childrenCollapsible .listItemImage {
+  border-radius: var(--lg-r-sm);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+#itemDetailPage .listItem-overview {
+  color: var(--lg-text-dim);
+  line-height: 1.55;
+}
+
+/* --- section headings on the page --- */
+#itemDetailPage .detailVerticalSection .sectionTitle {
+  font-size: 1.3em;
+}
+
+
+/* =====================================================================
+   11. MENUS, DIALOGS, TOASTS — only while no video is playing
+   ===================================================================== */
+
+body:not(:has(#videoOsdPage:not(.hide))) .dialog:not(.dialog-fullscreen):not(.dialog-fullscreen-lowres) {
+  background-color: var(--lg-tint-strong) !important;
+  background-image: var(--lg-sheen) !important;
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+  border: 1px solid var(--lg-edge);
+  border-radius: var(--lg-r-lg);
+  box-shadow: var(--lg-highlight), 0 28px 70px rgba(0, 0, 0, 0.55);
+  /* no overflow:hidden here — Jellyfin dialogs scroll as a whole
+     (overflow-y:auto on the dialog), and a scroll container already
+     clips its content to the rounded corners */
+}
+body:not(:has(#videoOsdPage:not(.hide))) .actionSheetMenuItem {
+  border-radius: var(--lg-r-sm);
+  margin: 2px 6px;
+  width: calc(100% - 12px);
+  transition: background-color 0.15s var(--lg-ease);
+}
+body:not(:has(#videoOsdPage:not(.hide))) .actionSheetMenuItem:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+body:not(:has(#videoOsdPage:not(.hide))) .formDialogHeader {
+  background: transparent;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+body:not(:has(#videoOsdPage:not(.hide))) .formDialogFooter {
+  background: transparent;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+body:not(:has(#videoOsdPage:not(.hide))) .dialogBackdropOpened {
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+body:not(:has(#videoOsdPage:not(.hide))) .toast {
+  border-radius: var(--lg-pill);
+  background-color: var(--lg-tint-strong);
+  background-image: var(--lg-sheen);
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+  border: 1px solid var(--lg-edge);
+  box-shadow: var(--lg-highlight), var(--lg-drop);
+}
+
+
+/* =====================================================================
+   12. SCROLLBARS
+   ===================================================================== */
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.20) transparent;
+}
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: var(--lg-pill);
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.30);
+}
+
+
+/* =====================================================================
+   13. EXPERIMENTAL — CINEMATIC HERO DETAIL PAGE (desktop only)
+   ---------------------------------------------------------------------
+   Full-screen artwork, no poster, everything centered: logo → title →
+   info → buttons with a "Play" pill, description below.
+   To go back: delete this whole section 13 (or use checkpoint 1).
+   ===================================================================== */
+
+/* no poster on the left */
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailPagePrimaryContainer > .detailImageContainer {
+  display: none !important;
+}
+
+/* the empty header box becomes a fully transparent hero spacer — the
+   artwork you see is the full-screen backdrop behind the page */
+/* hero sizes scale with the window but are capped in text units,
+   so logo, title and spacing stay together at any zoom / screen size */
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage {
+  --hero-h: clamp(14em, 46vh, 30em);     /* height of the artwork area   */
+  --logo-h: clamp(5em, 22vh, 12em);      /* height of the logo box       */
+  --logo-gap: 1.2em;                     /* space between logo and title */
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .itemBackdrop {
+  height: var(--hero-h) !important;
+  background: none !important;
+  box-shadow: none !important;
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .itemBackdrop::before,
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .itemBackdrop > * {
+  display: none !important;
+}
+/* only a faint strip behind the header — nothing at the bottom edge,
+   so there is no visible band above the title */
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .itemBackdrop::after {
+  content: none;          /* no grey strip on bright artwork — the header capsule is tinted instead */
+}
+
+/* Jellyfin hides the logo below ~1100 px window width; the hero layout
+   relies on it (the text title shrinks when a logo exists), so keep it */
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailLogo:not(.hide) {
+  display: block !important;
+}
+@media (max-width: 68.75em) {
+  html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailLogo {
+    width: min(62vw, 34em) !important;
+  }
+}
+
+/* the logo: big and centered in the hero */
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailLogo {
+  /* bottom edge of the logo sits a fixed gap above the title */
+  top: calc(var(--hero-h) - var(--logo-h) - var(--logo-gap));
+  left: 50%;
+  right: auto !important;
+  width: min(38vw, 40em);
+  height: var(--logo-h);
+  transform: translateX(-50%);
+  background-position: center bottom;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));   /* tight edge only, no dark halo */
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* info block: no bar, centered column */
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailRibbon {
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  height: auto !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0.6em 3.3% 0.4em !important;
+  text-align: center;
+  background: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+/* soft oval shade behind title/info/buttons: keeps white text readable on
+   bright artwork, practically invisible on dark artwork */
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailRibbon {
+  position: relative;
+  isolation: isolate;
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailRibbon::before {
+  content: "";
+  position: absolute;
+  inset: -2.5em 18% -1.5em;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, rgba(8, 10, 14, 0.42) 0%, rgba(8, 10, 14, 0.22) 45%, transparent 72%);
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailRibbon .infoWrapper {
+  flex: 0 0 auto;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailRibbon .nameContainer {
+  align-items: center;
+  max-width: 100%;
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailRibbon .itemName,
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailRibbon .parentName {
+  white-space: normal;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.7);
+}
+
+/* no logo → big title */
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailRibbon h1.itemName,
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailRibbon h1.parentName {
+  font-size: clamp(2.2em, 4vw, 3.6em);
+}
+/* logo present → the logo is the title, text title becomes a small subtitle */
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage:has(.detailLogo:not(.hide)) .detailRibbon h1.itemName,
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage:has(.detailLogo:not(.hide)) .detailRibbon h1.parentName {
+  font-size: 1.2em;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+/* year / runtime / rating: plain text like the reference, rating keeps a small frame */
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailRibbon .itemMiscInfo {
+  justify-content: center;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.7);
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailRibbon .itemMiscInfo-primary {
+  gap: 0.2em 1.1em;
+  margin-top: 0.55em;
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailRibbon .itemMiscInfo-primary > .mediaInfoItem:not(.mediaInfoCriticRating) {
+  padding: 0;
+  font-size: 1em;
+  background: none;
+  border: 0;
+  box-shadow: none;
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailRibbon .itemMiscInfo-primary > .mediaInfoOfficialRating {
+  padding: 0.05em 0.45em !important;
+  font-size: 0.8em !important;
+  border: 1px solid rgba(255, 255, 255, 0.55) !important;
+  border-radius: 5px;
+}
+
+/* buttons: centered; plain icons, Play becomes a light glass pill with text */
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailRibbon .mainDetailButtons {
+  justify-content: center;
+  flex-wrap: nowrap;
+  gap: 0.35em;
+  margin: 1.1em 0 0 !important;
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailRibbon .detailButton:not(.btnPlay) {
+  background: none;
+  border-color: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  filter: drop-shadow(0 1px 6px rgba(0, 0, 0, 0.6));
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailRibbon .detailButton:not(.btnPlay):hover {
+  background-color: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailRibbon .detailButton.btnPlay {
+  flex-direction: row !important;
+  gap: 0.45em;
+  padding: 0.7em 1.7em 0.7em 1.35em !important;
+  border-radius: var(--lg-pill);
+  color: #0b0d12;
+  background-color: rgba(235, 238, 245, 0.88);
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 60%);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 8px 26px rgba(0, 0, 0, 0.4);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  backdrop-filter: blur(16px) saturate(160%);
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailRibbon .detailButton.btnPlay:hover {
+  background-color: #fff;
+  box-shadow: inset 0 1px 0 #fff, 0 12px 32px rgba(0, 0, 0, 0.5);
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailRibbon .detailButton.btnPlay::after {
+  content: attr(title);              /* "Abspielen" / "Fortsetzen" from Jellyfin itself */
+  font-size: 1rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailRibbon .btnPlay .detailButton-icon {
+  font-size: 1.5em !important;
+}
+
+/* ADAPTIVE BACKGROUND behind the text
+   Instead of flat black, the content area is a heavily blurred, darkened
+   copy of the artwork behind it, so it takes on the image's colours
+   (reddish for Black Clover, violet for Mario Galaxy …). The darkening
+   keeps white text readable even on very bright images.
+   It fades in from the hero (measured in vh like the artwork itself). */
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailPageWrapperContainer {
+  position: relative;
+  isolation: isolate;                     /* keeps the glass layer behind the text */
+  background: none !important;
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailPageWrapperContainer::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  /* tint knobs: raise --adaptive-dim for more contrast, lower it for
+     more colour; --adaptive-light darkens the blurred image itself */
+  --adaptive-dim: 0.42;
+  --adaptive-light: 0.55;
+  background: linear-gradient(180deg,
+    rgba(8, 10, 14, calc(var(--adaptive-dim) - 0.12)) 0,
+    rgba(8, 10, 14, var(--adaptive-dim)) 30vh,
+    rgba(8, 10, 14, calc(var(--adaptive-dim) + 0.08)) 100%);
+  -webkit-backdrop-filter: blur(60px) saturate(170%) brightness(var(--adaptive-light));
+  backdrop-filter: blur(60px) saturate(170%) brightness(var(--adaptive-light));
+  /* invisible over the hero, fully there from just under the buttons */
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, rgba(0, 0, 0, 0.5) 6vh, #000 15vh);
+  mask-image: linear-gradient(180deg, transparent 0, rgba(0, 0, 0, 0.5) 6vh, #000 15vh);
+}
+/* text on the adaptive glass: a soft shadow for extra legibility */
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailPagePrimaryContent,
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailPageSecondaryContainer {
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.45);
+}
+/* fallback for browsers without backdrop-filter: the old dark fade */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailPageWrapperContainer {
+    background: linear-gradient(180deg,
+      rgba(11, 13, 18, 0) 0,
+      rgba(11, 13, 18, 0.35) 6vh,
+      rgba(11, 13, 18, 0.84) 15vh,
+      rgba(11, 13, 18, 0.95) 24vh,
+      rgba(11, 13, 18, 0.98) 100%) !important;
+  }
+}
+
+/* everything below the buttons: two columns
+     left  → audio/subtitle pills, tagline, description, tags, studios/genres
+     right → Next Up + Seasons
+   Jellyfin puts all of these in one container, so a grid sorts them into
+   the two columns. Movies (nothing for the right side) stay one column. */
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailPagePrimaryContent {
+  padding-left: 3.3% !important;
+  padding-right: 3.3% !important;
+  padding-top: 1.4em;
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailPagePrimaryContent > .detailSection {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 34%);
+  /* 8 rows for the left column, then one flexible row that absorbs
+     Next Up's height (so the left column never gets gaps), then Seasons */
+  grid-template-rows: repeat(8, auto) 1fr auto;
+  column-gap: clamp(2em, 4vw, 5em);
+  align-items: start;
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailPagePrimaryContent > .detailSection > * {
+  grid-column: 1;
+  min-width: 0;
+}
+
+/* right column */
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailSection > .nextUpSection {
+  grid-column: 2;
+  grid-row: 1 / 10;
+  margin-top: 0 !important;
+}
+/* Seasons: left column, directly under the text (next to Next Up) */
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailSection > #listChildrenCollapsible {
+  grid-column: 1;
+  margin-top: 1.8em !important;
+}
+/* season page: the episode list needs the full width → below everything */
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailSection > #listChildrenCollapsible:has(.vertical-list) {
+  grid-column: 1 / -1 !important;
+  grid-row: 11 / 12 !important;
+}
+/* no Next Up (movies, finished shows …) → single column */
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailPagePrimaryContent > .detailSection:not(:has(> .nextUpSection:not(.hide))) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* section headings: compact, aligned with the text */
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailSection > .nextUpSection .sectionTitle,
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailSection > #listChildrenCollapsible .sectionTitle {
+  margin-top: 0;
+  padding: 0 !important;
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailSection > .nextUpSection .itemsContainer,
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailSection > .nextUpSection .vertical-wrap,
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailSection > #listChildrenCollapsible .vertical-wrap {
+  padding-right: 0 !important;
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailSection > .nextUpSection .card {
+  width: 100% !important;          /* the next episode fills the right column */
+}
+/* season posters: left-aligned row in their normal size */
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailSection > #listChildrenCollapsible .vertical-wrap {
+  justify-content: flex-start !important;
+}
+
+/* left column: everything left-aligned */
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .trackSelections {
+  justify-content: flex-start;
+  margin: 0 0 1.4em;
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailSectionContent {
+  text-align: left;
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .tagline {
+  margin: 0 0 0.6em;
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .overview {
+  max-width: 95ch;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .overview-controls {
+  justify-content: flex-start;
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .itemTags,
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .itemExternalLinks {
+  color: var(--lg-text-dim);
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .itemDetailsGroup {
+  margin-top: 1.6em;
+}
+
+/* =====================================================================
+   14. MINIMAL VIDEO PLAYER CONTROLS
+   ---------------------------------------------------------------------
+   No box: controls float over a soft shade at the bottom, a thin
+   progress line below them. Icons are smaller and dimmed until hovered, the
+   seek knob only appears on hover, the volume slider slides out when
+   you hover the speaker. Heart (favourite) and picture-in-picture are
+   hidden. Player menus (audio/subtitles/settings) keep their original
+   look. To restore the stock player: delete this section 14.
+   ===================================================================== */
+
+/* shorter, softer shade behind the controls */
+#videoOsdPage .videoOsdBottom {
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.25) 55%, rgba(0, 0, 0, 0) 100%);
+  padding-top: 4.5em;
+  padding-bottom: max(1em, env(safe-area-inset-bottom));
+}
+
+/* controls float directly over the video — no box */
+#videoOsdPage .osdControls {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding: 0 1.4em 0.2em;
+  background: none;
+  border: 0;
+  box-shadow: none;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+}
+/* icons keep a soft shadow so they stay visible on bright scenes */
+#videoOsdPage .videoOsdBottom .paper-icon-button-light .material-icons {
+  filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.5));
+}
+
+/* fixed row order: (title) → buttons → progress line */
+#videoOsdPage .osdControls > .osdTextContainer { order: 0; }
+#videoOsdPage .osdControls > .buttons { order: 1; }
+#videoOsdPage .osdControls > .flex-direction-row { order: 2; }
+
+#videoOsdPage .osdControls > .osdTextContainer {
+  margin-bottom: 0.2em;
+  font-size: 0.9em;
+  color: rgba(255, 255, 255, 0.85);
+}
+#videoOsdPage .osdControls > .osdTextContainer:empty {
+  display: none;
+}
+
+/* buttons: small, dim, brighten on hover */
+#videoOsdPage .videoOsdBottom .buttons {
+  padding: 0;
+  gap: 0.1em;
+}
+#videoOsdPage .videoOsdBottom .buttons > div[dir="ltr"] {
+  display: flex;
+  align-items: center;
+  gap: 0.1em;
+}
+#videoOsdPage .videoOsdBottom .paper-icon-button-light {
+  margin: 0 !important;
+  padding: 0.4em !important;
+  border-radius: 50%;
+  color: rgba(255, 255, 255, 0.75);
+  background: transparent;
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+#videoOsdPage .videoOsdBottom .paper-icon-button-light:hover {
+  color: #fff;
+  background-color: rgba(255, 255, 255, 0.10);
+}
+#videoOsdPage .videoOsdBottom .paper-icon-button-light .material-icons {
+  font-size: 1.4em !important;
+}
+/* play / pause: the one bigger, fully white control */
+#videoOsdPage .videoOsdBottom .btnPause {
+  color: #fff;
+}
+#videoOsdPage .videoOsdBottom .btnPause .material-icons {
+  font-size: 1.85em !important;
+}
+
+/* "Ends at 14:12": quiet small text */
+#videoOsdPage .videoOsdBottom .osdTimeText {
+  margin-left: 0.9em;
+  font-size: 0.8em;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* minimal: hide favourite + picture-in-picture */
+#videoOsdPage .videoOsdBottom .btnUserRating,
+#videoOsdPage .videoOsdBottom .btnPip {
+  display: none !important;
+}
+
+/* volume: slider slides out when hovering the speaker (mouse only;
+   on phones/tablets the hardware buttons are used anyway) */
+#videoOsdPage .videoOsdBottom .volumeButtons {
+  margin: 0 0.2em;
+}
+@media (hover: hover) {
+  #videoOsdPage .videoOsdBottom .osdVolumeSliderContainer {
+    width: 0;
+    flex-grow: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: width 0.25s ease, opacity 0.2s ease;
+  }
+  #videoOsdPage .videoOsdBottom .volumeButtons:hover .osdVolumeSliderContainer,
+  #videoOsdPage .videoOsdBottom .volumeButtons:focus-within .osdVolumeSliderContainer {
+    width: 6em;
+    opacity: 1;
+  }
+}
+
+/* progress row: small time stamps around a thin line */
+#videoOsdPage .osdControls > .flex-direction-row {
+  gap: 0.7em;
+  margin-top: 0.1em;
+}
+#videoOsdPage .videoOsdBottom .osdPositionText,
+#videoOsdPage .videoOsdBottom .osdDurationText {
+  margin: 0 !important;
+  padding: 0;
+  font-size: 0.8em;
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* the line itself (also used by the volume slider) */
+#videoOsdPage .videoOsdBottom .mdl-slider-background-flex {
+  height: 3px;
+  margin-top: -1.5px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.20);
+  transition: height 0.2s ease, margin-top 0.2s ease;
+}
+#videoOsdPage .videoOsdBottom .sliderContainer:hover .mdl-slider-background-flex {
+  height: 5px;
+  margin-top: -2.5px;
+}
+#videoOsdPage .videoOsdBottom .mdl-slider-background-lower {
+  background-color: #fff;
+  border-radius: 3px;
+}
+#videoOsdPage .videoOsdBottom .mdl-slider-background-upper {
+  background: rgba(255, 255, 255, 0.32);      /* buffered part */
+}
+/* chapter ticks: clear, rounded markers that cross the line
+   (white ahead of you, blue for chapters you've already passed) */
+#videoOsdPage .videoOsdBottom .sliderMarker {
+  width: 3px;
+  height: 12px;
+  margin-left: -1.5px;            /* centre the tick on its exact position */
+  border-radius: 2px;
+  opacity: 1;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.45), 0 1px 4px rgba(0, 0, 0, 0.5);
+  z-index: 2;
+  pointer-events: none;
+}
+#videoOsdPage .videoOsdBottom .sliderMarker.unwatched {
+  background-color: rgba(255, 255, 255, 0.92);
+}
+#videoOsdPage .videoOsdBottom .sliderMarker.watched {
+  background-color: var(--lg-accent);
+}
+
+/* seek knob: hidden until you hover the line */
+#videoOsdPage .videoOsdBottom .mdl-slider::-webkit-slider-thumb {
+  width: 0.85em;
+  height: 0.85em;
+  background: #fff;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
+  transform: scale(0);
+}
+#videoOsdPage .videoOsdBottom .mdl-slider::-moz-range-thumb {
+  width: 0.85em;
+  height: 0.85em;
+  background: #fff;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
+  transform: scale(0);
+}
+#videoOsdPage .videoOsdBottom .sliderContainer:hover .mdl-slider::-webkit-slider-thumb,
+#videoOsdPage .videoOsdBottom .mdl-slider:focus-visible::-webkit-slider-thumb {
+  transform: scale(1);
+}
+#videoOsdPage .videoOsdBottom .sliderContainer:hover .mdl-slider::-moz-range-thumb,
+#videoOsdPage .videoOsdBottom .mdl-slider:focus-visible::-moz-range-thumb {
+  transform: scale(1);
+}
+
+/* time bubble while seeking: small glass pill */
+#videoOsdPage .videoOsdBottom .sliderBubble {
+  border-radius: 10px;
+  background: rgba(12, 14, 20, 0.6);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+/* seek bubble: only the time — hide the chapter name ("Episode" …) */
+#videoOsdPage .chapterThumbText-dim {
+  display: none !important;
+}
+#videoOsdPage .chapterThumbTextContainer {
+  padding: 0.25em 0.6em;
+}
+#videoOsdPage h2.chapterThumbText,
+#videoOsdPage .sliderBubbleText {
+  margin: 0;
+  font-size: 1.05em;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- "Skip Intro" / "Skip Credits" button ---
+   Intro Skipper feeds Jellyfin's built-in skip button (.skip-button), so
+   this styles both. Frosted glass pill over the video; turns solid white
+   like the movie page's Play pill when hovered or selected. */
+.skip-button-container {
+  bottom: 7.5rem;
+  transition: bottom 0.35s cubic-bezier(0.22, 0.8, 0.24, 1);
+}
+/* controls hidden → the button drops down closer to the corner */
+body:has(#videoOsdPage .videoOsdBottom-hidden) .skip-button-container {
+  bottom: 3rem;
+}
+.skip-button {
+  gap: 0.45em;
+  margin-right: max(1.6rem, env(safe-area-inset-right));
+  padding: 0.7em 1.15em 0.7em 1.5em;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: #fff;
+  background: rgba(14, 16, 22, 0.42);
+  -webkit-backdrop-filter: blur(20px) saturate(170%);
+  backdrop-filter: blur(20px) saturate(170%);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 10px 30px rgba(0, 0, 0, 0.4);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+  transform: translateX(0);
+  transition: opacity 250ms ease-out, transform 350ms cubic-bezier(0.22, 0.8, 0.24, 1),
+              background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+/* slides in from the right when it appears */
+.skip-button.skip-button-hidden {
+  transform: translateX(1.5rem);
+}
+.skip-button.no-transition {
+  transition: none;
+}
+.skip-button .material-icons {
+  font-size: 1.35em;
+  margin-right: -0.1em;
+}
+.skip-button:hover,
+.skip-button:focus,
+.skip-button.show-focus:focus {
+  color: #0b0d12 !important;
+  background: rgba(255, 255, 255, 0.94) !important;
+  border-color: rgba(255, 255, 255, 0.9);
+  text-shadow: none;
+  box-shadow: inset 0 1px 0 #fff, 0 12px 34px rgba(0, 0, 0, 0.45);
+  outline: none;
+}
+.skip-button:active {
+  transform: scale(0.96);
+}
+.layout-mobile .skip-button {
+  margin-right: max(1rem, env(safe-area-inset-right));
+  font-size: 0.92rem;
+}
+
+/* --- "Up Next" card near the end of an episode ---
+   Glass card bottom-right: small countdown label, episode title,
+   "Start now" as a white pill, "Hide" as a glass pill. */
+#videoOsdPage .upNextContainer {
+  width: min(24em, calc(100vw - 2.4rem));
+  box-sizing: border-box;
+  margin: 0 max(1.6rem, env(safe-area-inset-right)) 1.6rem 0;
+  padding: 1.05em 1.2em 1.1em;
+  border-radius: 22px;
+  background: rgba(14, 16, 22, 0.45);
+  -webkit-backdrop-filter: blur(24px) saturate(170%);
+  backdrop-filter: blur(24px) saturate(170%);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 18px 48px rgba(0, 0, 0, 0.5);
+  transform: translateY(0);
+  transition: opacity 300ms ease-out, transform 400ms cubic-bezier(0.22, 0.8, 0.24, 1);
+}
+/* rises in from below */
+#videoOsdPage .upNextContainer.upNextDialog-hidden {
+  transform: translateY(1.2rem);
+}
+/* "Next episode playing in 12 seconds" → small label, countdown in blue */
+#videoOsdPage .upNextDialog-nextVideoText {
+  margin: 0 0 0.35em !important;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+}
+#videoOsdPage .upNextDialog-countdownText {
+  color: var(--lg-accent-light);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+/* episode title */
+#videoOsdPage .upNextDialog-title {
+  width: auto;
+  max-width: 100%;
+  margin: 0 0 0.35em !important;
+  font-size: 1.12rem;
+  font-weight: 650;
+  line-height: 1.3;
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+/* year / runtime / rating: one quiet line */
+#videoOsdPage .upNextDialog-mediainfo {
+  flex-wrap: wrap;
+  gap: 0.2em 0.8em;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.62);
+}
+#videoOsdPage .upNextDialog-mediainfo .mediaInfoItem {
+  margin: 0 !important;
+}
+/* buttons */
+#videoOsdPage .upNextDialog-buttons {
+  width: auto;
+  gap: 0.5em;
+  margin-top: 0.95em !important;
+  justify-content: flex-start;
+}
+#videoOsdPage .upNextDialog-button {
+  margin: 0 !important;
+  padding: 0.55em 1.25em;
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-transform: none;
+  border-radius: 999px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+}
+#videoOsdPage .upNextDialog-button.btnStartNow {
+  color: #0b0d12;
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(255, 255, 255, 0.9);
+  box-shadow: inset 0 1px 0 #fff, 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+#videoOsdPage .upNextDialog-button:hover,
+#videoOsdPage .upNextDialog-button:focus {
+  outline: none;
+}
+#videoOsdPage .upNextDialog-button.btnHide:hover,
+#videoOsdPage .upNextDialog-button.btnHide:focus {
+  color: #fff !important;
+  background: rgba(255, 255, 255, 0.2) !important;
+}
+#videoOsdPage .upNextDialog-button.btnStartNow:hover,
+#videoOsdPage .upNextDialog-button.btnStartNow:focus {
+  color: #0b0d12 !important;
+  background: #fff !important;
+}
+#videoOsdPage .upNextDialog-button:active {
+  transform: scale(0.96);
+}
+/* skip-credits button + Up Next card at the same time: the button moves
+   up above the card instead of overlapping it */
+body:has(#videoOsdPage .upNextContainer:not(.hide):not(.upNextDialog-hidden)) .skip-button-container {
+  bottom: 12.5rem;
+}
+
+/* --- player menus: audio, subtitles, settings / quality / speed ---
+   Same glass as the rest, a bit more opaque so text stays readable
+   over a moving picture; the current choice gets a blue check. */
+body:has(#videoOsdPage:not(.hide)) .actionSheet.actionsheet-not-fullscreen {
+  min-width: 15em;
+  border-radius: 20px !important;
+  background-color: rgba(14, 16, 22, 0.72) !important;
+  background-image: linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.01) 50%) !important;
+  -webkit-backdrop-filter: blur(26px) saturate(170%);
+  backdrop-filter: blur(26px) saturate(170%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 22px 56px rgba(0, 0, 0, 0.55);
+}
+body:has(#videoOsdPage:not(.hide)) .actionSheet.actionsheet-fullscreen {
+  background-color: rgba(10, 12, 16, 0.88) !important;
+  -webkit-backdrop-filter: blur(26px) saturate(170%);
+  backdrop-filter: blur(26px) saturate(170%);
+}
+body:has(#videoOsdPage:not(.hide)) .actionSheet .actionSheetContent {
+  padding: 0.45em 0 !important;
+}
+body:has(#videoOsdPage:not(.hide)) .actionSheet .actionSheetTitle {
+  margin: 0.5em 0 0.4em !important;
+  padding: 0 1.1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+}
+body:has(#videoOsdPage:not(.hide)) .actionSheet .actionSheetMenuItem {
+  margin: 1px 6px;
+  width: calc(100% - 12px);
+  border-radius: 12px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.9);
+  transition: background-color 0.15s ease;
+}
+body:has(#videoOsdPage:not(.hide)) .actionSheet .actionSheetMenuItem:hover,
+body:has(#videoOsdPage:not(.hide)) .actionSheet .actionSheetMenuItem:focus {
+  color: #fff !important;
+  background: rgba(255, 255, 255, 0.10) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10);
+}
+body:has(#videoOsdPage:not(.hide)) .actionSheet .actionsheetMenuItemIcon {
+  font-size: 1.15em !important;
+  color: var(--lg-accent-light);
+}
+body:has(#videoOsdPage:not(.hide)) .actionSheet .actionSheetItemAsideText {
+  margin-left: 2.5em;
+  color: rgba(255, 255, 255, 0.55);
+  opacity: 1;
+}
+body:has(#videoOsdPage:not(.hide)) .actionSheet .listItemBodyText.secondary {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.85em;
+}
+body:has(#videoOsdPage:not(.hide)) .actionSheet .actionsheetDivider {
+  margin: 0.3em 1em;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* phones: a bit tighter */
+.layout-mobile #videoOsdPage .osdControls {
+  padding: 0 0.7em 0.2em;
+}
+
+
+/* =====================================================================
+   15. LOGIN SCREEN
+   ---------------------------------------------------------------------
+   Everything sits on one centered glass card: round profile pictures,
+   the manual sign-in form, and the extra options (Manual login, Quick
+   Connect, Forgot password, Change server) as a row of small pills.
+   ===================================================================== */
+
+#loginPage > div {
+  box-sizing: border-box;
+  width: min(34rem, calc(100% - 2rem));
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding: 1.6rem 1.8rem 1.4rem !important;
+  border-radius: 28px;
+  background-color: rgba(16, 19, 26, 0.48);
+  background-image: var(--lg-sheen);
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+  border: 1px solid var(--lg-edge);
+  box-shadow: var(--lg-highlight), 0 30px 80px rgba(0, 0, 0, 0.5);
+}
+
+/* headings */
+#loginPage h1,
+#loginPage .sectionTitle {
+  margin: 0.2em 0 0.9em !important;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  text-align: center;
+}
+
+/* user picker: round avatars with a glass ring */
+#loginPage #divUsers {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem 0.6rem;
+}
+#loginPage #divUsers .card {
+  width: 7.5rem !important;
+}
+#loginPage #divUsers .cardScalable,
+#loginPage #divUsers .cardContent,
+#loginPage #divUsers .cardImageContainer,
+#loginPage #divUsers .cardImage,
+#loginPage #divUsers .cardPadder {
+  border-radius: 50% !important;
+}
+#loginPage #divUsers .cardScalable {
+  outline: 2px solid rgba(255, 255, 255, 0.18);
+  outline-offset: -2px;
+}
+#loginPage #divUsers .cardBox:hover .cardScalable,
+#loginPage #divUsers .cardBox:focus-within .cardScalable {
+  outline-color: var(--lg-accent);
+  box-shadow: 0 0 0 4px var(--lg-accent-soft), 0 14px 34px rgba(0, 0, 0, 0.5);
+}
+#loginPage #divUsers .cardFooter {
+  background: none;
+}
+#loginPage #divUsers .cardText {
+  padding: 0.5em 0 0;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* manual sign-in form */
+#loginPage .manualLoginForm {
+  max-width: none;
+}
+#loginPage .manualLoginForm .inputContainer {
+  margin-bottom: 1.1em;
+}
+#loginPage .manualLoginForm .inputLabel {
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  color: var(--lg-text-dim);
+}
+#loginPage .manualLoginForm .emby-input {
+  padding: 0.75em 1em;
+  font-size: 1rem;
+}
+#loginPage .manualLoginForm .checkboxContainer {
+  margin: 0.2em 0 1.2em;
+}
+#loginPage .manualLoginForm .button-submit {
+  width: 100%;
+  margin: 0;
+  font-size: 1rem;
+}
+#loginPage .manualLoginForm .btnCancel {
+  width: 100%;
+  margin: 0;
+}
+
+/* extra options → one row of small glass pills */
+#loginPage .readOnlyContent {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.45em;
+  max-width: none !important;
+  margin: 1.4em 0 0 !important;
+  padding-top: 1.2em;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+#loginPage .readOnlyContent > .emby-button.raised {
+  display: inline-flex;
+  width: auto !important;
+  margin: 0 !important;
+  padding: 0.5em 1.05em;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.82);
+  background-color: rgba(255, 255, 255, 0.06);
+  background-image: none;
+}
+#loginPage .readOnlyContent > .emby-button.raised:hover {
+  color: #fff;
+  background-color: rgba(255, 255, 255, 0.13);
+}
+#loginPage .readOnlyContent > .emby-button.hide {
+  display: none !important;
+}
+#loginPage .loginDisclaimerContainer {
+  flex-basis: 100%;
+  margin-top: 1em;
+  color: var(--lg-text-dim);
+  font-size: 0.88rem;
+}
+#loginPage .loginDisclaimerContainer:has(.loginDisclaimer:empty) {
+  display: none;
+}
+
+/* phones: card fills the width */
+.layout-mobile #loginPage > div {
+  width: calc(100% - 1.2rem);
+  padding: 1.3rem 1.1rem 1.2rem !important;
+  border-radius: 22px;
+}
+
+
+/* =====================================================================
+   16. SEASON PAGE — EPISODE LIST (desktop browser)
+   ---------------------------------------------------------------------
+   Each episode is a glass row: compact 16:9 thumbnail, bold title,
+   quiet info line, 3-line description. Hover: green rim + mint title
+   (no effects on the image itself). Watched episodes are slightly dimmed.
+   ===================================================================== */
+
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage #listChildrenCollapsible .vertical-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9em;
+  padding-right: 0 !important;
+}
+
+/* the row */
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage #listChildrenCollapsible .vertical-list > .listItem {
+  overflow: visible;
+  gap: 1.2em;
+  margin: 0 !important;
+  padding: 0.75em 1em 0.75em 0.75em !important;
+  border-radius: 22px;
+  background-color: rgba(255, 255, 255, 0.035);
+  background-image: linear-gradient(160deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0) 50%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.09);
+  transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage #listChildrenCollapsible .vertical-list > .listItem:hover,
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage #listChildrenCollapsible .vertical-list > .listItem:focus-visible {
+  background-color: rgb(var(--lg-accent-rgb) / 0.07);
+  border-color: rgb(var(--lg-accent-rgb) / 0.45);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 0 0 1px rgb(var(--lg-accent-rgb) / 0.15), 0 10px 28px rgba(0, 0, 0, 0.3);
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage #listChildrenCollapsible .vertical-list > .listItem:hover .listItemBody > .listItemBodyText:first-child,
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage #listChildrenCollapsible .vertical-list > .listItem:focus-visible .listItemBody > .listItemBodyText:first-child {
+  color: var(--lg-accent-light);
+}
+
+/* thumbnail: smaller, fixed 16:9, rounded, glass rim — no hover effects */
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage #listChildrenCollapsible .listItemImage-large {
+  width: clamp(10rem, 15vw, 13.5rem);
+  height: auto;
+  aspect-ratio: 16 / 9;
+  flex-shrink: 0;
+  margin: 0 !important;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+  outline: 1px solid rgba(255, 255, 255, 0.12);
+  outline-offset: -1px;
+  overflow: hidden;
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage #listChildrenCollapsible .listItemImage-large .listItemIndicators {
+  top: 0.4em;
+  right: 0.4em;
+  font-size: 0.85em;
+}
+
+/* play button on the thumbnail: hidden until hover, glass bead → green */
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage #listChildrenCollapsible .listItemImageButton {
+  padding: 0;
+  color: #fff;
+  background: transparent;
+  opacity: 0;
+  transform: scale(0.9);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage #listChildrenCollapsible .listItemImageButton-icon {
+  padding: 0.4em;
+  font-size: 1.15em;
+  color: #fff;
+  background: rgba(12, 14, 20, 0.55);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25), 0 6px 16px rgba(0, 0, 0, 0.45);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage #listChildrenCollapsible .listItem:hover .listItemImageButton {
+  opacity: 1;
+  transform: scale(1);
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage #listChildrenCollapsible .listItemImageButton:hover {
+  background: transparent;
+  transform: scale(1.08);
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage #listChildrenCollapsible .listItemImageButton:hover .listItemImageButton-icon {
+  color: var(--lg-on-accent);
+  background: var(--lg-accent);
+}
+
+/* text: title, info line, description */
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage #listChildrenCollapsible .listItem-content {
+  gap: 1.2em;
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage #listChildrenCollapsible .listItemBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25em;
+  min-width: 0;
+  padding: 0.1em 0 !important;
+  text-shadow: none;
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage #listChildrenCollapsible .listItemBody > .listItemBodyText:first-child {
+  transition: color 0.2s ease;
+  font-size: 1.05rem;
+  font-weight: 650;
+  line-height: 1.3;
+  white-space: normal;
+  color: #fff;
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage #listChildrenCollapsible .listItemMediaInfo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2em 0.9em;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.55);
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage #listChildrenCollapsible .listItemMediaInfo .mediaInfoItem {
+  margin: 0 !important;
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage #listChildrenCollapsible .listItem-overview {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-width: 85ch;
+  margin-top: 0.2em;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  white-space: normal;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+/* right-hand buttons (watched, favourite, more): quiet until hover */
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage #listChildrenCollapsible .listViewUserDataButtons {
+  display: flex;
+  align-items: center;
+  gap: 0.15em;
+  align-self: center;
+  opacity: 0.5;
+  transition: opacity 0.25s ease;
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage #listChildrenCollapsible .listItem:hover .listViewUserDataButtons {
+  opacity: 1;
+}
+
+/* watched episodes: slightly dimmed, full again on hover */
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage #listChildrenCollapsible .listItem:has(.playedIndicator) .listItemBody,
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage #listChildrenCollapsible .listItem:has(.playedIndicator) .listItemImage-large {
+  opacity: 0.68;
+  transition: opacity 0.3s ease;
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage #listChildrenCollapsible .listItem:has(.playedIndicator):hover .listItemBody,
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage #listChildrenCollapsible .listItem:has(.playedIndicator):hover .listItemImage-large {
+  opacity: 1;
+}
+
+
+/* =====================================================================
+   17. HOME PAGE
+   ---------------------------------------------------------------------
+   • section titles become small, quiet labels
+   • tighter spacing between sections
+   • Continue Watching + Next Up: bigger cards, title inside the image
+   • library tiles (Anime / Movies / Shows): wide banners filling the row
+   ===================================================================== */
+
+/* quiet section labels */
+.homeSectionsContainer .sectionTitle {
+  margin-top: 0 !important;
+  margin-bottom: 0.15em !important;
+  font-size: 0.8rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.58);
+}
+.homeSectionsContainer .sectionTitleTextButton .material-icons {
+  font-size: 1.15rem;
+  color: rgba(255, 255, 255, 0.45);
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+.homeSectionsContainer .sectionTitleTextButton:hover .sectionTitle,
+.homeSectionsContainer .sectionTitleTextButton:hover .material-icons {
+  color: var(--lg-accent);
+}
+.homeSectionsContainer .sectionTitleTextButton:hover .material-icons {
+  transform: translateX(3px);
+}
+
+/* tighter spacing */
+.page:not(#videoOsdPage):not(#nowPlayingPage) .homeSectionsContainer .verticalSection {
+  margin-bottom: 1em;
+}
+.homeSectionsContainer .verticalSection:empty {
+  display: none;
+}
+
+/* --- Continue Watching + Next Up: big cards, text inside the image --- */
+@media (min-width: 50em) {
+  .homeSectionsContainer .itemsContainer[data-monitor*="videoplayback"] > .card {
+    width: clamp(16rem, 22vw, 26rem) !important;
+  }
+}
+.homeSectionsContainer .itemsContainer[data-monitor*="videoplayback"] .cardBox {
+  position: relative;
+}
+/* soft shade at the bottom of the image so the text is readable
+   (sits under the progress bar and the badges) */
+.homeSectionsContainer .itemsContainer[data-monitor*="videoplayback"] .cardScalable > .cardImageContainer::after {
+  content: "";
+  position: absolute;
+  inset: 40% 0 0 0;
+  z-index: 0;
+  border-radius: 0 0 var(--lg-r) var(--lg-r);
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.35) 55%, rgba(0, 0, 0, 0) 100%);
+  pointer-events: none;
+}
+/* the title / episode text moves into the image, bottom-left */
+/* (pulled up over the image with a negative margin of its own height, so
+   it always sits on the image's bottom edge and takes no extra space) */
+.homeSectionsContainer .itemsContainer[data-monitor*="videoplayback"] .cardFooter {
+  position: relative;
+  z-index: 3;
+  box-sizing: border-box;
+  height: 4.6em;
+  margin-top: -4.6em;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 0 1.1em 1.3em !important;
+  text-align: left;
+  pointer-events: none;
+}
+.homeSectionsContainer .itemsContainer[data-monitor*="videoplayback"] .cardText {
+  justify-content: flex-start;
+  padding-left: 0 !important;
+  text-align: left !important;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.75);
+}
+.homeSectionsContainer .itemsContainer[data-monitor*="videoplayback"] .cardText-first {
+  font-size: 1.08rem;
+  font-weight: 700;
+  color: #fff;
+}
+.homeSectionsContainer .itemsContainer[data-monitor*="videoplayback"] .cardText-secondary {
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.78);
+}
+/* hover: the whole card (image + text) lifts together */
+@media (hover: hover) {
+  .page:not(#videoOsdPage):not(#nowPlayingPage) .homeSectionsContainer .itemsContainer[data-monitor*="videoplayback"] .cardBox {
+    transform-origin: 50% 100%;
+    transition: transform 0.45s var(--lg-ease);
+  }
+  .page:not(#videoOsdPage):not(#nowPlayingPage) .homeSectionsContainer .itemsContainer[data-monitor*="videoplayback"] .cardBox:hover {
+    transform: perspective(900px) rotateX(5deg) translateY(-10px) scale(1.05);
+  }
+  .page:not(#videoOsdPage):not(#nowPlayingPage) .homeSectionsContainer .itemsContainer[data-monitor*="videoplayback"] .cardBox:hover .cardScalable {
+    transform: none;
+  }
+  /* keep the text clear of the hover buttons on the right */
+  .homeSectionsContainer .itemsContainer[data-monitor*="videoplayback"] .cardBox:hover .cardFooter {
+    padding-right: 7.5em !important;
+  }
+}
+
+/* --- library tiles: wide banners that fill the row --- */
+@media (min-width: 50em) {
+  .homeSectionsContainer .verticalSection:has(.card[data-collectiontype]) .itemsContainer {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 24rem));
+    justify-content: start;
+    box-sizing: border-box;
+    width: 100% !important;
+    padding-right: 3.3%;
+    transform: none !important;
+    white-space: normal;
+  }
+  .homeSectionsContainer .verticalSection:has(.card[data-collectiontype]) .itemsContainer > .card {
+    width: auto !important;
+  }
+  .homeSectionsContainer .card[data-collectiontype] .cardPadder {
+    padding-bottom: 42% !important;          /* wide, cinematic banner */
+  }
+  /* the banners never scroll → no ‹ › arrows, and a bit closer to the row above */
+  .homeSectionsContainer .verticalSection:has(.card[data-collectiontype]) .emby-scrollbuttons {
+    display: none !important;
+  }
+  .homeSectionsContainer .verticalSection:has(.card[data-collectiontype]) {
+    margin-top: -0.8em;
+  }
+}
+
+
+/* =====================================================================
+   18. PHONE (Jellyfin app / mobile browser) — movie & show page
+   ---------------------------------------------------------------------
+   Same idea as the desktop hero: tall artwork at the top that fades into
+   the page, logo centered on it, then title / info / buttons centered,
+   Play as a white pill. The small poster is dropped when there is
+   artwork (people, books etc. without artwork keep the normal layout).
+   ===================================================================== */
+
+html.layout-mobile #itemDetailPage {
+  --m-hero-h: min(60vh, 135vw);           /* artwork height            */
+  --m-logo-h: min(15vh, 28vw);            /* logo box height           */
+}
+
+/* artwork: taller, fades into the page */
+html.layout-mobile #itemDetailPage .itemBackdrop {
+  height: var(--m-hero-h) !important;
+  background-position: center top !important;
+  /* long, soft fade so there is no visible edge where the artwork ends */
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 45%, rgba(0, 0, 0, 0.8) 60%, rgba(0, 0, 0, 0.45) 76%, rgba(0, 0, 0, 0.15) 90%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 0%, #000 45%, rgba(0, 0, 0, 0.8) 60%, rgba(0, 0, 0, 0.45) 76%, rgba(0, 0, 0, 0.15) 90%, transparent 100%);
+}
+html.layout-mobile #itemDetailPage .itemBackdrop::after {
+  content: none;
+}
+
+/* with artwork: no small poster, logo centered on the artwork */
+html.layout-mobile #itemDetailPage:has(#itemBackdrop[style*="url("]) .detailImageContainer {
+  display: none !important;
+}
+html.layout-mobile #itemDetailPage:has(#itemBackdrop[style*="url("]) .detailLogo:not(.hide) {
+  display: block !important;
+  position: absolute;
+  left: 50%;
+  right: auto !important;
+  transform: translateX(-50%);
+  width: min(78vw, 30em);
+  height: var(--m-logo-h);
+  /* artwork starts 48px under the app bar (Jellyfin pulls it up); the
+     title row below overlaps the artwork by 1.4rem → logo sits above that
+     with a 1rem gap */
+  top: calc(var(--m-hero-h) - 48px - 1.4rem - 1rem - var(--m-logo-h));
+  background-position: center bottom;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* title / info / buttons: centered, no glass bar, no poster gap */
+html.layout-mobile #itemDetailPage .detailRibbon {
+  position: relative;
+  z-index: 2;
+  margin-top: -1.4rem;
+  padding: 0 5% 0.3rem !important;
+  text-align: center;
+  background: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+html.layout-mobile #itemDetailPage .detailRibbon .infoWrapper,
+html.layout-mobile #itemDetailPage .detailRibbon .mainDetailButtons {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  margin-left: 0 !important;
+}
+html.layout-mobile #itemDetailPage .detailRibbon .nameContainer {
+  align-items: center;
+}
+html.layout-mobile #itemDetailPage .detailRibbon .itemName,
+html.layout-mobile #itemDetailPage .detailRibbon .parentName {
+  text-align: center;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.7);
+}
+/* logo present → the text title becomes a small subtitle */
+html.layout-mobile #itemDetailPage:has(#itemBackdrop[style*="url("]):has(.detailLogo:not(.hide)) .detailRibbon h1.itemName,
+html.layout-mobile #itemDetailPage:has(#itemBackdrop[style*="url("]):has(.detailLogo:not(.hide)) .detailRibbon h1.parentName {
+  font-size: 1.05em;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* year / runtime / rating: one quiet centered line */
+html.layout-mobile #itemDetailPage .detailRibbon .itemMiscInfo {
+  justify-content: center;
+}
+html.layout-mobile #itemDetailPage .detailRibbon .itemMiscInfo-primary {
+  gap: 0.2em 0.9em;
+  margin-top: 0.4em;
+}
+html.layout-mobile #itemDetailPage .detailRibbon .itemMiscInfo-primary > .mediaInfoItem:not(.mediaInfoCriticRating) {
+  margin: 0 !important;
+  padding: 0;
+  font-size: 0.92em;
+  background: none;
+  border: 0;
+  box-shadow: none;
+}
+html.layout-mobile #itemDetailPage .detailRibbon .itemMiscInfo-primary > .mediaInfoOfficialRating {
+  padding: 0.05em 0.4em !important;
+  font-size: 0.8em !important;
+  border: 1px solid rgba(255, 255, 255, 0.5) !important;
+  border-radius: 5px;
+}
+
+/* buttons: centered; plain icons, Play as a white pill with its label */
+html.layout-mobile #itemDetailPage .detailRibbon .mainDetailButtons {
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.25em;
+  margin-top: 0.9em !important;
+  margin-bottom: 0.4em !important;
+}
+html.layout-mobile #itemDetailPage .detailRibbon .detailButton:not(.btnPlay) {
+  padding: 0.6em !important;
+  background: none;
+  border-color: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+html.layout-mobile #itemDetailPage .detailRibbon .detailButton.btnPlay {
+  flex-basis: 100%;
+  flex-direction: row !important;
+  justify-content: center;
+  gap: 0.45em;
+  max-width: 22em;
+  margin: 0 auto 0.35em !important;
+  padding: 0.75em 1.4em !important;
+  border-radius: var(--lg-pill);
+  color: #0b0d12;
+  background-color: rgba(235, 238, 245, 0.92);
+  background-image: none;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.4);
+}
+html.layout-mobile #itemDetailPage .detailRibbon .detailButton.btnPlay::after {
+  content: attr(title);
+  font-size: 1rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+html.layout-mobile #itemDetailPage .detailRibbon .btnPlay .detailButton-icon {
+  font-size: 1.45em !important;
+}
+
+/* content below: a bit more breathing room */
+html.layout-mobile #itemDetailPage .detailPagePrimaryContent {
+  padding-top: 0.6em;
+}
+html.layout-mobile #itemDetailPage .trackSelections {
+  justify-content: center;
+}
+html.layout-mobile #itemDetailPage .overview {
+  font-size: 0.98em;
+  line-height: 1.6;
+}
+
+/* season page episode rows on the phone: compact glass cards */
+html.layout-mobile #itemDetailPage #listChildrenCollapsible .listItem {
+  padding: 0.55em !important;
+  border-radius: 16px;
+}
+html.layout-mobile #itemDetailPage #listChildrenCollapsible .listItemImage-large {
+  width: 36vw !important;
+  height: auto !important;
+  aspect-ratio: 16 / 9;
+  border-radius: 10px;
+  overflow: hidden;
+}
+html.layout-mobile #itemDetailPage #listChildrenCollapsible .listItemBody > .listItemBodyText:first-child {
+  font-size: 0.95rem;
+  font-weight: 650;
+  white-space: normal;
+}
+html.layout-mobile #itemDetailPage #listChildrenCollapsible .listItem-bottomoverview {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0.5em 0.2em 0.1em;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.62);
+}
+html.layout-mobile #itemDetailPage #listChildrenCollapsible .listItem:has(.playedIndicator) .listItemBody,
+html.layout-mobile #itemDetailPage #listChildrenCollapsible .listItem:has(.playedIndicator) .listItemImage-large {
+  opacity: 0.68;
+}
+
+
+/* =====================================================================
+   19. SEARCH
+   ===================================================================== */
+
+#searchPage .searchFields {
+  padding-top: 1.4em;
+  padding-bottom: 0.4em;
+}
+/* the search field: one glass pill with the icon inside */
+#searchPage .searchFieldsInner {
+  max-width: 42em;
+  padding: 0.25em 0.6em 0.25em 1.1em;
+  border-radius: var(--lg-pill);
+  background-color: rgba(255, 255, 255, 0.06);
+  background-image: var(--lg-sheen);
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: var(--lg-highlight), 0 10px 30px rgba(0, 0, 0, 0.3);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+#searchPage .searchFieldsInner:focus-within {
+  border-color: var(--lg-accent);
+  box-shadow: var(--lg-highlight), 0 0 0 4px var(--lg-accent-soft), 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+#searchPage .searchfields-icon {
+  align-self: center;
+  margin: 0 0.35em 0 0;
+  font-size: 1.5em;
+  color: rgba(255, 255, 255, 0.5);
+  transition: color 0.2s ease;
+}
+#searchPage .searchFieldsInner:focus-within .searchfields-icon {
+  color: var(--lg-accent);
+}
+#searchPage .searchFieldsInner .emby-input,
+#searchPage .searchFieldsInner .emby-input:focus {
+  padding: 0.65em 0.3em;
+  font-size: 1.1rem;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+#searchPage .searchFieldsInner .inputLabel {
+  display: none;
+}
+
+/* suggestions before you type: centered row of pills */
+#searchPage .searchSuggestions {
+  margin-top: 1.8em;
+  text-align: center;
+}
+#searchPage .searchSuggestions .sectionTitle,
+#searchPage .searchResults .sectionTitle {
+  margin: 0 0 0.3em !important;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.58);
+}
+#searchPage .searchSuggestionsList {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5em;
+  max-width: 46em;
+  margin: 0.7em auto 0;
+}
+#searchPage .searchSuggestionsList .button-link {
+  display: inline-block;
+  padding: 0.45em 1.05em;
+  border-radius: var(--lg-pill);
+  font-size: 0.9rem;
+  text-decoration: none;
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+#searchPage .searchSuggestionsList .button-link:hover,
+#searchPage .searchSuggestionsList .button-link:focus-visible {
+  color: #fff;
+  background: var(--lg-accent-soft);
+  border-color: rgb(var(--lg-accent-rgb) / 0.45);
+}
+#searchPage .noItemsMessage {
+  margin-top: 3em;
+  color: var(--lg-text-dim);
+}
+
+
+/* =====================================================================
+   20. PERSON / STUDIO / GENRE PAGES (filmography pages)
+   ---------------------------------------------------------------------
+   Round portrait centered at the top, name below, filmography as
+   labelled rows. Recognised by their filmography sections.
+   ===================================================================== */
+
+/* desktop: small top space instead of the big artwork area, portrait back */
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage:has(#childrenContent > .verticalSection[data-type]) .itemBackdrop {
+  height: 5.5rem !important;
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage:has(#childrenContent > .verticalSection[data-type]) .detailPagePrimaryContainer > .detailImageContainer {
+  display: block !important;
+  width: 12rem;
+  margin: 0 auto 0.7rem;
+}
+/* phone: no big empty artwork area, portrait centered above the name */
+html.layout-mobile #itemDetailPage:has(#childrenContent > .verticalSection[data-type]):not(:has(#itemBackdrop[style*="url("])) .itemBackdrop {
+  height: 3.5rem !important;
+}
+html.layout-mobile #itemDetailPage:has(#childrenContent > .verticalSection[data-type]):not(:has(#itemBackdrop[style*="url("])) .detailRibbon {
+  margin-top: 0;
+}
+html.layout-mobile #itemDetailPage:has(#childrenContent > .verticalSection[data-type]) .infoWrapper .detailImageContainer {
+  display: block !important;
+  width: 9.5rem;
+  margin: 0.3rem auto 0.9rem;
+}
+/* the portrait card itself (both layouts) */
+html:not(.layout-tv) #itemDetailPage:has(#childrenContent > .verticalSection[data-type]) .detailImageContainer .card {
+  position: static !important;
+  float: none !important;
+  top: auto !important;
+  left: auto !important;
+  bottom: auto !important;
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  filter: none !important;
+}
+html:not(.layout-tv) #itemDetailPage:has(#childrenContent > .verticalSection[data-type]) .detailImageContainer .cardPadder {
+  padding-bottom: 100% !important;
+}
+html:not(.layout-tv) #itemDetailPage:has(#childrenContent > .verticalSection[data-type]) .detailImageContainer .cardScalable,
+html:not(.layout-tv) #itemDetailPage:has(#childrenContent > .verticalSection[data-type]) .detailImageContainer .cardContent,
+html:not(.layout-tv) #itemDetailPage:has(#childrenContent > .verticalSection[data-type]) .detailImageContainer .cardImageContainer,
+html:not(.layout-tv) #itemDetailPage:has(#childrenContent > .verticalSection[data-type]) .detailImageContainer .cardPadder {
+  border-radius: 50% !important;
+}
+html:not(.layout-tv) #itemDetailPage:has(#childrenContent > .verticalSection[data-type]) .detailImageContainer .cardImageContainer {
+  background-position: center 20% !important;
+}
+html:not(.layout-tv) #itemDetailPage:has(#childrenContent > .verticalSection[data-type]) .detailImageContainer .cardScalable {
+  outline: 2px solid rgba(255, 255, 255, 0.18) !important;
+  outline-offset: -2px;
+  box-shadow: 0 0 0 6px var(--lg-accent-soft), 0 20px 50px rgba(0, 0, 0, 0.5) !important;
+}
+/* birthday / birthplace / death: quiet info lines */
+#itemDetailPage #itemBirthday,
+#itemDetailPage #itemBirthLocation,
+#itemDetailPage #itemDeathDate {
+  margin: 0.2em 0;
+  font-size: 0.9rem;
+  color: var(--lg-text-dim);
+}
+/* filmography rows: labelled like the home page */
+#itemDetailPage #childrenContent > .verticalSection[data-type] {
+  margin-bottom: 1.4em;
+}
+#itemDetailPage #childrenContent > .verticalSection[data-type] .sectionTitle {
+  margin: 0 0 0.5em !important;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.58);
+}
+#itemDetailPage #childrenContent > .verticalSection[data-type] .itemsContainer {
+  display: flex;
+  flex-wrap: wrap;
+  padding-right: 0 !important;
+}
+
+
+/* =====================================================================
+   21. HOME PAGE ON THE PHONE
+   ===================================================================== */
+
+@media (max-width: 50em) {
+  /* Continue Watching / Next Up: a bit wider, next card still peeks in */
+  .homeSectionsContainer .itemsContainer[data-monitor*="videoplayback"] > .card {
+    width: 82vw !important;
+  }
+  /* library banners: two per row */
+  .homeSectionsContainer .verticalSection:has(.card[data-collectiontype]) .itemsContainer {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    box-sizing: border-box;
+    width: 100% !important;
+    padding-right: 4%;
+    transform: none !important;
+    white-space: normal;
+  }
+  .homeSectionsContainer .verticalSection:has(.card[data-collectiontype]) .itemsContainer > .card {
+    width: auto !important;
+  }
+  .homeSectionsContainer .verticalSection:has(.card[data-collectiontype]) .emby-scrollbuttons {
+    display: none !important;
+  }
+}
+
+
+/* =====================================================================
+   22. SETTINGS (your own preferences — not the admin dashboard)
+   ---------------------------------------------------------------------
+   Centered column, each group on its own glass panel, labels like the
+   rest of the theme, inputs as recessed glass with a green focus.
+   ===================================================================== */
+
+.userPreferencesPage .readOnlyContent,
+.userPreferencesPage form,
+#myPreferencesMenuPage .readOnlyContent {
+  max-width: 52em;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+.userPreferencesPage .verticalSection,
+#myPreferencesMenuPage .verticalSection,
+#displayPreferencesPage .settingsContainer > form {
+  box-sizing: border-box;
+  padding: 1.3em 1.5em 0.7em;
+  margin-bottom: 1.2em !important;
+  border-radius: 22px;
+  background-color: rgba(255, 255, 255, 0.04);
+  background-image: var(--lg-sheen);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: var(--lg-highlight), 0 12px 32px rgba(0, 0, 0, 0.25);
+}
+#displayPreferencesPage .settingsContainer > form {
+  margin-top: 1em;
+  padding-bottom: 1.4em;
+}
+.userPreferencesPage .sectionTitle,
+#myPreferencesMenuPage .sectionTitle {
+  margin: 0 0 1em !important;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--lg-accent-light);
+}
+.userPreferencesPage .fieldDescription {
+  margin-top: 0.35em;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--lg-text-dim);
+}
+.userPreferencesPage .checkboxContainer {
+  margin-bottom: 0.9em;
+}
+#myPreferencesMenuPage .listItem-border {
+  border-color: rgba(255, 255, 255, 0.07);
+}
+#myPreferencesMenuPage .listItem:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+/* the newer (MUI) settings fields */
+.userPreferencesPage .MuiOutlinedInput-root {
+  border-radius: 12px;
+  background-color: rgba(255, 255, 255, 0.05);
+}
+.userPreferencesPage .MuiOutlinedInput-notchedOutline {
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  transition: border-color 0.2s ease;
+}
+.userPreferencesPage .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: rgba(255, 255, 255, 0.28) !important;
+}
+.userPreferencesPage .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: var(--lg-accent) !important;
+}
+.userPreferencesPage .MuiFormHelperText-root {
+  color: var(--lg-text-dim);
+}
+
+
+/* =====================================================================
+   23. LIBRARY FILTER & SORT PANELS
+   ---------------------------------------------------------------------
+   The panels are already glass; this cleans up what's inside: no grey
+   boxes, rounded hover rows, green check marks, quiet group labels.
+   ===================================================================== */
+
+.MuiPopover-paper .MuiAccordion-root {
+  margin: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+.MuiPopover-paper .MuiAccordion-root:last-of-type {
+  border-bottom: 0;
+}
+.MuiPopover-paper .MuiAccordion-root::before {
+  display: none;
+}
+.MuiPopover-paper .MuiAccordionSummary-root {
+  min-height: 44px !important;
+  margin: 2px 6px;
+  padding: 0 12px;
+  border-radius: 12px;
+  transition: background-color 0.15s ease;
+}
+.MuiPopover-paper .MuiAccordionSummary-root:hover {
+  background-color: rgba(255, 255, 255, 0.07);
+}
+.MuiPopover-paper .MuiAccordionSummary-content {
+  margin: 10px 0 !important;
+}
+.MuiPopover-paper .MuiAccordionSummary-root.Mui-expanded .MuiTypography-root {
+  font-weight: 600;
+  color: var(--lg-accent-light);
+}
+.MuiPopover-paper .MuiAccordionDetails-root {
+  max-height: 18em;
+  overflow-y: auto;
+  padding: 2px 18px 12px;
+}
+.MuiPopover-paper .MuiFormControlLabel-label {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.86);
+}
+.MuiPopover-paper .MuiCheckbox-root {
+  padding: 6px;
+}
+/* sort / view menus */
+.MuiPopover-paper .MuiListSubheader-root {
+  line-height: 2.6;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+  background: transparent;
+}
+.MuiPopover-paper .MuiMenuItem-root {
+  margin: 1px 6px;
+  border-radius: 10px;
+  font-size: 0.92rem;
+}
+.MuiPopover-paper .MuiMenuItem-root:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+.MuiPopover-paper .MuiMenuItem-root.Mui-selected {
+  background-color: var(--lg-accent-soft);
+}
+.MuiPopover-paper .MuiMenuItem-root.Mui-selected .MuiListItemIcon-root {
+  color: var(--lg-accent);
+}
+.MuiPopover-paper .MuiDivider-root {
+  margin: 6px 14px !important;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+
+/* ---------- Optional: Inter font (uncomment both parts) ----------
+   Note: @import must be the very first line of the Custom CSS box.
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
+.page:not(#videoOsdPage):not(#nowPlayingPage),
+.skinHeader:not(.osdHeader),
+.mainDrawer {
+  font-family: "Inter", "Noto Sans", sans-serif;
+}
+------------------------------------------------------------------ */
