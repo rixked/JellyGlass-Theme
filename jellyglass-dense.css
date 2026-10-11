@@ -1,0 +1,714 @@
+/* JellyGlass Dense — optional add-on for JellyGlass
+   https://github.com/rixked/JellyGlass-Theme
+   Three columns on show, season, movie and episode pages (desktop, 1200px+):
+   poster + info left, big artwork with Play bar in the middle, episode list right.
+   Load it AFTER the main theme (Dashboard → General → Custom CSS):
+   @import url("https://cdn.jsdelivr.net/gh/rixked/jellyglass-theme@main/jellyglass.css");
+   @import url("https://cdn.jsdelivr.net/gh/rixked/jellyglass-theme@main/jellyglass-dense.css"); */
+
+/* THEME COLOUR — lime by default; override it below the imports like in the main theme */
+:root {
+  --lg-accent-rgb: 163 230 53;
+  --lg-on-accent:  #0c1a00;
+}
+
+@media (min-width: 75em) {
+
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage#itemDetailPage:is(
+  :has(.trackSelections:not(.hide)),
+  :has(#listChildrenCollapsible .card[data-type="Season"]),
+  :has(#listChildrenCollapsible .listItem[data-type="Episode"])
+) {
+  --dn-bg:     #0a0b0c;
+  --dn-panel:  #111214;
+  --dn-chip:   #17181b;
+  --dn-line:   rgba(255, 255, 255, 0.07);
+  --dn-dim:    rgba(255, 255, 255, 0.55);
+  --dn-mono:   ui-monospace, "JetBrains Mono", "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  --dn-r:      8px;
+  --dn-pad:    clamp(1rem, 1.6vw, 2rem);
+  --dn-gap:    clamp(0.9rem, 1.2vw, 1.4rem);
+  --dn-top:    4.6rem;
+  --dn-right:  clamp(18rem, 23vw, 28rem);
+  /* the middle column is 16:9, the left column is a 2:3 poster of the same height */
+  --dn-tile-h: calc((100vw - 2 * var(--dn-pad) - 2 * var(--dn-gap) - var(--dn-right)) * 9 / 22);
+
+  /* ===== 1. GRID ===== */
+
+  & .itemBackdrop {
+    display: none !important;
+  }
+
+  & .detailPageWrapperContainer {
+    display: grid !important;
+    grid-template-columns:
+      calc((100% - 2 * var(--dn-gap) - var(--dn-right)) * 3 / 11)
+      minmax(0, 1fr)
+      var(--dn-right);
+    grid-template-rows: var(--dn-tile-h) repeat(24, auto) 1fr;
+    column-gap: var(--dn-gap);
+    row-gap: 0;
+    align-items: start;
+    box-sizing: border-box;
+    min-height: 100vh;
+    margin: 0 !important;
+    padding: var(--dn-top) var(--dn-pad) 2.5rem;
+    position: relative;
+    isolation: isolate;
+    background: none !important;
+  }
+
+  & .detailPagePrimaryContainer,
+  & .detailRibbon,
+  & .detailPagePrimaryContent,
+  & .detailPagePrimaryContent > .detailSection,
+  & .detailPageSecondaryContainer {
+    display: contents !important;
+  }
+  & .detailRibbon::before {
+    content: none !important;
+  }
+
+  & .detailPageWrapperContainer,
+  & .detailRibbon,
+  & .detailPagePrimaryContent,
+  & .detailPageSecondaryContainer,
+  & :is(h1, h2, h3, .itemName, .parentName, .itemMiscInfo, .overview, .tagline) {
+    text-shadow: none !important;
+  }
+
+  /* black page with a 16:9 window onto the artwork */
+  & .detailPageWrapperContainer::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: -8em;
+    z-index: -1;
+    pointer-events: none;
+    background: var(--dn-bg);
+    -webkit-mask-image:
+      linear-gradient(90deg,
+        #000 calc(var(--dn-pad) + (100% - 2 * var(--dn-pad) - 2 * var(--dn-gap) - var(--dn-right)) * 3 / 11 + var(--dn-gap)),
+        transparent 0,
+        transparent calc(100% - var(--dn-pad) - var(--dn-right) - var(--dn-gap)),
+        #000 0),
+      linear-gradient(180deg,
+        #000 var(--dn-top),
+        transparent 0,
+        transparent calc(var(--dn-top) + var(--dn-tile-h)),
+        #000 0);
+    mask-image:
+      linear-gradient(90deg,
+        #000 calc(var(--dn-pad) + (100% - 2 * var(--dn-pad) - 2 * var(--dn-gap) - var(--dn-right)) * 3 / 11 + var(--dn-gap)),
+        transparent 0,
+        transparent calc(100% - var(--dn-pad) - var(--dn-right) - var(--dn-gap)),
+        #000 0),
+      linear-gradient(180deg,
+        #000 var(--dn-top),
+        transparent 0,
+        transparent calc(var(--dn-top) + var(--dn-tile-h)),
+        #000 0);
+  }
+
+  /* frame around the window (rounds its corners) */
+  & .detailPageWrapperContainer::before {
+    content: "" !important;
+    position: relative !important;
+    inset: auto !important;
+    grid-column: 2;
+    grid-row: 1;
+    align-self: stretch;
+    z-index: 0;
+    border-radius: var(--dn-r);
+    background: none !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    -webkit-mask-image: none !important;
+    mask-image: none !important;
+    box-shadow: 0 0 0 6px var(--dn-bg), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+    pointer-events: none;
+  }
+
+  /* middle column: everything that isn't placed elsewhere, stacked below the artwork */
+  & .detailPagePrimaryContent > .detailSection > *,
+  & .detailPageSecondaryContainer > * {
+    grid-column: 2 !important;
+    grid-row: auto !important;
+    min-width: 0;
+    margin: 1.4rem 0 0 !important;
+  }
+  & .trackSelections { order: -2; }
+  & .nextUpSection   { order: -1; }
+
+  & .padded-left  { padding-left: 0 !important; }
+  & .padded-right { padding-right: 0 !important; }
+
+  /* ===== 2. LEFT: POSTER + INFO ===== */
+
+  & .detailPagePrimaryContainer > .detailImageContainer {
+    display: block !important;
+    grid-column: 1;
+    grid-row: 1 / -1;
+    align-self: start;
+    min-width: 0;
+  }
+  & .detailPagePrimaryContainer > .detailImageContainer .card {
+    float: none;
+    position: relative;
+    top: 0;
+    left: 0;
+    right: auto;
+    width: 100% !important;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+  }
+  & .detailPagePrimaryContainer > .detailImageContainer .cardScalable,
+  & .detailPagePrimaryContainer > .detailImageContainer .cardImageContainer,
+  & .detailPagePrimaryContainer > .detailImageContainer .cardPadder {
+    border-radius: var(--dn-r) !important;
+  }
+  & .detailPagePrimaryContainer > .detailImageContainer .cardScalable {
+    transform: none !important;
+    box-shadow: none !important;
+    outline: 1px solid rgba(255, 255, 255, 0.08);
+    outline-offset: -1px;
+  }
+
+  & .infoWrapper {
+    grid-column: 1;
+    grid-row: 1 / -1;
+    align-self: start;
+    display: flex !important;
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 0.6rem;
+    width: auto !important;
+    min-width: 0;
+    margin: 0;
+    padding: 1rem 1.1rem 1.1rem;
+    text-align: left;
+    background: var(--dn-panel);
+    border: 1px solid var(--dn-line);
+    border-radius: var(--dn-r);
+    box-sizing: border-box;
+  }
+  /* info sits right under the image (margins in % = % of the column width) */
+  &:has(.detailPagePrimaryContainer > .detailImageContainer .portraitCard) .infoWrapper { margin-top: calc(150% + 0.75rem); }
+  &:has(.detailPagePrimaryContainer > .detailImageContainer .squareCard)   .infoWrapper { margin-top: calc(100% + 0.75rem); }
+  &:has(.detailPagePrimaryContainer > .detailImageContainer .backdropCard) .infoWrapper { margin-top: calc(56.25% + 0.75rem); }
+  &:has(.detailPagePrimaryContainer > .detailImageContainer .bannerCard)   .infoWrapper { margin-top: calc(18.5% + 0.75rem); }
+
+  & .infoWrapper .nameContainer {
+    align-items: flex-start !important;
+    text-align: left;
+    margin: 0;
+  }
+  & .infoWrapper :is(h1.itemName, h1.parentName, h3.parentName) {
+    margin: 0 !important;
+    font-size: 1.35rem !important;
+    font-weight: 750 !important;
+    letter-spacing: -0.01em !important;
+    line-height: 1.2;
+    color: #fff !important;
+    white-space: normal;
+  }
+  & .infoWrapper h3.itemName.subtitle {
+    margin: 0.3rem 0 0 !important;
+    font-size: 0.95rem !important;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.78);
+  }
+  & .infoWrapper .itemName.originalTitle {
+    font-size: 0.85rem !important;
+    color: var(--dn-dim);
+  }
+
+  & .infoWrapper .itemMiscInfo {
+    justify-content: flex-start !important;
+    flex-wrap: wrap;
+    white-space: normal;
+    margin: 0 !important;
+  }
+  & .infoWrapper .itemMiscInfo-primary {
+    gap: 0.35rem !important;
+  }
+  & .infoWrapper .itemMiscInfo-primary > .mediaInfoItem:not(.mediaInfoCriticRating) {
+    margin: 0 !important;
+    padding: 0.22em 0.55em !important;
+    font-family: var(--dn-mono);
+    font-size: 0.7rem !important;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.82);
+    background: var(--dn-chip) !important;
+    border: 1px solid var(--dn-line) !important;
+    border-radius: 4px !important;
+    box-shadow: none !important;
+  }
+  & .infoWrapper .itemMiscInfo-primary > .mediaInfoOfficialRating {
+    color: var(--lg-accent) !important;
+    border-color: rgb(var(--lg-accent-rgb) / 0.45) !important;
+  }
+  & .infoWrapper .itemMiscInfo-primary > .mediaInfoCriticRating,
+  & .infoWrapper .itemMiscInfo-primary > .starRatingContainer {
+    margin: 0 0.2rem !important;
+    font-size: 0.85rem;
+  }
+  & .infoWrapper .itemMiscInfo-secondary {
+    font-family: var(--dn-mono);
+    font-size: 0.72rem !important;
+    letter-spacing: 0.04em;
+    color: var(--dn-dim);
+  }
+
+  /* ===== 3. MIDDLE: PLAY BAR ON THE ARTWORK ===== */
+
+  & .detailLogo:not(.hide) {
+    display: block !important;
+    position: absolute;
+    top: calc(var(--dn-top) + var(--dn-tile-h) * 0.42 - var(--dn-tile-h) * 0.13) !important;
+    left: calc(var(--dn-pad) + var(--dn-gap) + (100% - 2 * var(--dn-pad) - 2 * var(--dn-gap) - var(--dn-right)) * 7 / 11) !important;
+    right: auto !important;
+    width: calc((100% - 2 * var(--dn-pad) - 2 * var(--dn-gap) - var(--dn-right)) * 8 / 11 * 0.46) !important;
+    height: calc(var(--dn-tile-h) * 0.26) !important;
+    transform: translateX(-50%);
+    background-position: center !important;
+    filter: drop-shadow(0 2px 14px rgba(0, 0, 0, 0.65));
+    z-index: 3;
+    pointer-events: none;
+  }
+
+  & .mainDetailButtons {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: end;
+    z-index: 2;
+    display: flex !important;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-start !important;
+    gap: 0.2rem !important;
+    min-width: 0;
+    margin: 0 !important;
+    padding: 3.5rem 0.9rem 0.8rem !important;
+    background: linear-gradient(0deg, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.5) 50%, rgba(0, 0, 0, 0) 100%);
+    border-radius: 0 0 var(--dn-r) var(--dn-r);
+  }
+  & .mainDetailButtons .detailButton {
+    margin: 0 !important;
+    padding: 0.55em !important;
+    color: rgba(255, 255, 255, 0.88);
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 6px !important;
+    box-shadow: none !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    filter: none !important;
+    transform: none !important;
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+  & .mainDetailButtons .detailButton:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.12) !important;
+  }
+  & .mainDetailButtons .detailButton.btnPlay {
+    order: -1;
+    margin-right: auto !important;
+    padding: 0.5em 1.2em 0.5em 0.85em !important;
+    color: var(--lg-on-accent) !important;
+    background: var(--lg-accent) !important;
+  }
+  & .mainDetailButtons .detailButton.btnPlay:hover {
+    background: var(--lg-accent-hover) !important;
+  }
+  & .mainDetailButtons .detailButton.btnPlay::after {
+    font-size: 0.82rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  & .mainDetailButtons .btnPlay .detailButton-icon {
+    font-size: 1.45em !important;
+  }
+
+  /* audio / subtitle pickers as a flat strip */
+  & .trackSelections:not(.hide) {
+    display: flex !important;
+    flex-wrap: wrap;
+    justify-content: flex-start !important;
+    gap: 0.5rem !important;
+    padding: 0.55rem !important;
+    background: var(--dn-panel);
+    border: 1px solid var(--dn-line);
+    border-radius: var(--dn-r);
+  }
+  & .trackSelections .selectContainer {
+    padding: 0.3em 0.35em 0.3em 0.75em !important;
+    background: var(--dn-chip) !important;
+    background-image: none !important;
+    border: 1px solid var(--dn-line) !important;
+    border-radius: 6px !important;
+    box-shadow: none !important;
+  }
+  & .trackSelections .selectContainer:hover {
+    border-color: rgba(255, 255, 255, 0.16) !important;
+  }
+  & .trackSelections .selectContainer:focus-within {
+    border-color: var(--lg-accent) !important;
+    box-shadow: 0 0 0 2px rgb(var(--lg-accent-rgb) / 0.3) !important;
+  }
+  & .trackSelections .selectLabel {
+    font-family: var(--dn-mono);
+    font-size: 0.64rem !important;
+    font-weight: 700;
+    color: var(--lg-accent) !important;
+  }
+  @supports (appearance: base-select) {
+    & .trackSelections .detailTrackSelect::picker(select) {
+      border-radius: var(--dn-r);
+      background: var(--dn-panel);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
+    }
+    & .trackSelections .detailTrackSelect option {
+      border-radius: 5px;
+    }
+  }
+
+  /* description + details */
+  & .tagline {
+    margin: 0 0 0.5rem !important;
+    font-style: normal !important;
+    font-size: 1rem !important;
+    font-weight: 600;
+    color: var(--lg-accent-light) !important;
+  }
+  & .overview {
+    max-width: 92ch !important;
+    font-size: 0.95rem !important;
+    line-height: 1.65 !important;
+    color: rgba(255, 255, 255, 0.78) !important;
+  }
+  & .itemDetailsGroup {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+    gap: 0.55rem 1.6rem;
+    padding: 0.9rem 1rem !important;
+    background: var(--dn-panel);
+    border: 1px solid var(--dn-line);
+    border-radius: var(--dn-r);
+  }
+  & .itemDetailsGroup:empty {
+    display: none;
+  }
+  & .detailsGroupItem {
+    display: flex;
+    align-items: baseline;
+    gap: 0.7rem;
+    margin: 0 !important;
+  }
+  & .detailsGroupItem .label {
+    flex: 0 0 5.5rem !important;
+    font-family: var(--dn-mono);
+    font-size: 0.66rem !important;
+    letter-spacing: 0.07em !important;
+    color: var(--dn-dim) !important;
+  }
+  & .detailsGroupItem .button-link {
+    padding: 0.12em 0.5em !important;
+    font-size: 0.82rem !important;
+    border-radius: 4px !important;
+    background: var(--dn-chip) !important;
+    border: 1px solid var(--dn-line) !important;
+    box-shadow: none !important;
+  }
+  & .detailsGroupItem .button-link:hover {
+    color: var(--lg-accent);
+    border-color: rgb(var(--lg-accent-rgb) / 0.45) !important;
+  }
+
+  /* section headings with a small accent bar */
+  & .sectionTitle {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    margin: 0 0 0.75rem !important;
+    padding: 0 !important;
+    font-size: 1.05rem !important;
+    font-weight: 750;
+    letter-spacing: 0;
+  }
+  & .sectionTitle::before {
+    content: "";
+    flex: none;
+    width: 3px;
+    height: 1em;
+    border-radius: 2px;
+    background: var(--lg-accent);
+  }
+
+  /* ===== 4. RIGHT: EPISODES / SEASONS / MORE LIKE THIS ===== */
+
+  & #listChildrenCollapsible:not(.hide),
+  & .moreFromSeasonSection:not(.hide),
+  & #similarCollapsible:not(.hide) {
+    grid-column: 3 !important;
+    grid-row: 1 / -1 !important;
+    align-self: start;
+    display: flex !important;
+    flex-direction: column;
+    min-width: 0;
+    margin: 0 !important;
+    padding: 0.9rem 0.45rem 0.5rem 0.9rem !important;
+    background: var(--dn-panel);
+    border: 1px solid var(--dn-line);
+    border-radius: var(--dn-r);
+    box-sizing: border-box;
+  }
+  /* the top list is exactly as tall as the artwork and scrolls inside */
+  & #listChildrenCollapsible:not(.hide),
+  & .moreFromSeasonSection:not(.hide) {
+    height: var(--dn-tile-h);
+    overflow: hidden;
+  }
+  &:has(#listChildrenCollapsible:not(.hide)) #similarCollapsible,
+  &:has(.moreFromSeasonSection:not(.hide)) #similarCollapsible {
+    margin-top: calc(var(--dn-tile-h) + var(--dn-gap)) !important;
+  }
+
+  & #listChildrenCollapsible > .sectionTitle {
+    display: flex !important;
+  }
+  & :is(#listChildrenCollapsible, .moreFromSeasonSection, #similarCollapsible) > .sectionTitle {
+    flex: none;
+    margin-right: 0.45rem !important;
+  }
+  & :is(.moreFromSeasonSection, #similarCollapsible) .emby-scrollbuttons {
+    display: none !important;
+  }
+
+  & #listChildrenCollapsible > #childrenContent,
+  & .moreFromSeasonSection > .emby-scroller {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    padding: 0 0.45rem 0 0 !important;
+    margin: 0 !important;
+    scrollbar-width: thin;
+  }
+  & #similarCollapsible > .emby-scroller {
+    overflow: visible !important;
+    padding: 0 0.45rem 0 0 !important;
+    margin: 0 !important;
+  }
+
+  & #listChildrenCollapsible :is(.vertical-list, .vertical-wrap),
+  & :is(.moreFromSeasonSection, #similarCollapsible) .scrollSlider {
+    display: flex !important;
+    flex-direction: column;
+    flex-wrap: nowrap !important;
+    gap: 0.25rem !important;
+    width: auto !important;
+    padding: 0 !important;
+    white-space: normal !important;
+    transform: none !important;
+  }
+
+  /* --- poster / thumbnail cards as rows --- */
+  & :is(#listChildrenCollapsible, .moreFromSeasonSection, #similarCollapsible, .nextUpSection) .card {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    contain: none !important;
+    font-size: inherit;
+  }
+  & :is(#listChildrenCollapsible, .moreFromSeasonSection, #similarCollapsible, .nextUpSection) .cardBox {
+    display: flex !important;
+    align-items: center;
+    gap: 0.8rem;
+    margin: 0 !important;
+    padding: 0.4rem;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+  }
+  & :is(#listChildrenCollapsible, .moreFromSeasonSection, #similarCollapsible, .nextUpSection) .cardBox:hover {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: var(--dn-line);
+  }
+  & :is(#listChildrenCollapsible, .moreFromSeasonSection, #similarCollapsible, .nextUpSection) .cardScalable {
+    flex: 0 0 auto;
+    width: 3.6rem;
+    overflow: hidden !important;
+    transform: none !important;
+    box-shadow: none !important;
+    outline-color: rgba(255, 255, 255, 0.08) !important;
+  }
+  & :is(#listChildrenCollapsible, .moreFromSeasonSection, #similarCollapsible, .nextUpSection) :is(.backdropCard, .overflowBackdropCard) .cardScalable {
+    width: 7.25rem;
+  }
+  & .nextUpSection :is(.backdropCard, .overflowBackdropCard) .cardScalable {
+    width: clamp(10rem, 14vw, 14rem);
+  }
+  & :is(#listChildrenCollapsible, .moreFromSeasonSection, #similarCollapsible, .nextUpSection) :is(.cardScalable, .cardImageContainer, .cardContent, .cardPadder, .blurhash-canvas) {
+    border-radius: 5px !important;
+  }
+  & :is(#listChildrenCollapsible, .moreFromSeasonSection, #similarCollapsible, .nextUpSection) .cardScalable > .cardImageContainer::before,
+  & :is(#listChildrenCollapsible, .moreFromSeasonSection, #similarCollapsible, .nextUpSection) .cardOverlayContainer {
+    display: none !important;
+  }
+  & :is(#listChildrenCollapsible, .moreFromSeasonSection, #similarCollapsible, .nextUpSection) .cardIndicators {
+    transform: scale(0.72);
+    transform-origin: top right;
+  }
+  & :is(#listChildrenCollapsible, .moreFromSeasonSection, #similarCollapsible, .nextUpSection) .cardFooter {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0 !important;
+    padding: 0 !important;
+    text-align: left !important;
+    background: none !important;
+  }
+  & :is(#listChildrenCollapsible, .moreFromSeasonSection, #similarCollapsible, .nextUpSection) .cardText {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    padding: 0 !important;
+    text-align: left !important;
+    white-space: normal !important;
+    font-size: 0.9rem;
+    font-weight: 650;
+    line-height: 1.3;
+    color: #fff;
+  }
+  & :is(#listChildrenCollapsible, .moreFromSeasonSection, #similarCollapsible, .nextUpSection) .cardText-secondary {
+    -webkit-line-clamp: 1;
+    margin-top: 0.2rem;
+    font-family: var(--dn-mono);
+    font-size: 0.66rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--dn-dim);
+  }
+  & .nextUpSection .cardText {
+    font-size: 1rem;
+  }
+
+  /* --- season page: episode rows --- */
+  & #listChildrenCollapsible .vertical-list > .listItem {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem !important;
+    margin: 0 !important;
+    padding: 0.4rem !important;
+    background: transparent !important;
+    background-image: none !important;
+    border: 1px solid transparent !important;
+    border-radius: 6px !important;
+    box-shadow: none !important;
+  }
+  & #listChildrenCollapsible .vertical-list > .listItem:hover {
+    background: rgba(255, 255, 255, 0.04) !important;
+    border-color: var(--dn-line) !important;
+  }
+  & #listChildrenCollapsible .listItem-content {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem !important;
+    width: 100%;
+    min-width: 0;
+  }
+  & #listChildrenCollapsible .listItemImage-large {
+    width: clamp(5.75rem, 6.6vw, 7.25rem) !important;
+    border-radius: 5px !important;
+    box-shadow: none !important;
+    outline-color: rgba(255, 255, 255, 0.08) !important;
+  }
+  & #listChildrenCollapsible .listItemBody {
+    gap: 0.2rem !important;
+  }
+  & #listChildrenCollapsible .listItemBody > .listItemBodyText:first-child {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    font-size: 0.9rem !important;
+    font-weight: 650 !important;
+  }
+  & #listChildrenCollapsible .listItemMediaInfo {
+    gap: 0.15em 0.7em !important;
+    font-family: var(--dn-mono);
+    font-size: 0.64rem !important;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  & #listChildrenCollapsible :is(.listItem-overview, .listItem-bottomoverview) {
+    display: none !important;
+  }
+  /* info + watched buttons float over the row on hover, so titles get the full width */
+  & #listChildrenCollapsible .listViewUserDataButtons {
+    position: absolute;
+    top: 50%;
+    right: 0.35rem;
+    transform: translateY(-50%);
+    padding: 0.1rem;
+    background: var(--dn-panel);
+    border: 1px solid var(--dn-line);
+    border-radius: 6px;
+    opacity: 0 !important;
+    pointer-events: none;
+    transition: opacity 0.15s ease !important;
+  }
+  & #listChildrenCollapsible .listItem:is(:hover, :focus-within) .listViewUserDataButtons {
+    opacity: 1 !important;
+    pointer-events: auto;
+  }
+  & #listChildrenCollapsible .listViewUserDataButtons > :not([is="emby-playstatebutton"]):not([data-action="link"]) {
+    display: none !important;
+  }
+  & #listChildrenCollapsible .listViewUserDataButtons .listItemButton {
+    padding: 0.3em !important;
+    font-size: 0.85em;
+  }
+
+  /* next episode to watch: first unwatched after the watched ones, or one in progress */
+  & #listChildrenCollapsible .vertical-list:not(:has(.playedIndicator)) > .listItem:first-child,
+  & #listChildrenCollapsible .listItem:has(.playedIndicator) + .listItem:not(:has(.playedIndicator)),
+  & #listChildrenCollapsible .listItem[data-positionticks],
+  & .moreFromSeasonSection .card:has(.playedIndicator) + .card:not(:has(.playedIndicator)) > .cardBox {
+    background: rgb(var(--lg-accent-rgb) / 0.08) !important;
+    border-color: rgb(var(--lg-accent-rgb) / 0.5) !important;
+    box-shadow: inset 3px 0 0 var(--lg-accent) !important;
+  }
+  & #listChildrenCollapsible .vertical-list:not(:has(.playedIndicator)) > .listItem:first-child .listItemBodyText:first-child,
+  & #listChildrenCollapsible .listItem:has(.playedIndicator) + .listItem:not(:has(.playedIndicator)) .listItemBodyText:first-child,
+  & #listChildrenCollapsible .listItem[data-positionticks] .listItemBodyText:first-child,
+  & .moreFromSeasonSection .card:has(.playedIndicator) + .card:not(:has(.playedIndicator)) .cardText:not(.cardText-secondary) {
+    color: var(--lg-accent-light) !important;
+  }
+
+  /* next up (shows): one wide row in the middle column */
+  & .nextUpSection:not(.hide) {
+    padding: 0.9rem 0.9rem 0.6rem !important;
+    background: var(--dn-panel);
+    border: 1px solid var(--dn-line);
+    border-radius: var(--dn-r);
+  }
+  & .nextUpSection .nextUpItems {
+    display: block !important;
+    padding: 0 !important;
+  }
+}
+
+}
