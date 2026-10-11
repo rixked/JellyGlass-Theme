@@ -8,13 +8,13 @@ A liquid-glass theme for **Jellyfin 12** (built and tested on 12.1, web client).
 2. Paste this single line:
 
    ```css
-   @import url("https://cdn.jsdelivr.net/gh/rixked/JellyGlass-Theme@main/jellyglass.css");
+   @import url("https://cdn.jsdelivr.net/gh/rixked/jellyglass-theme@main/jellyglass.css");
    ```
 
 3. Click **Save**, then hard-refresh the browser (`Ctrl + Shift + R`). In the phone app, close and reopen it.
 
 The theme now updates automatically whenever this repo changes. jsDelivr caches files for up to about 12 hours. To get a change right away, open
-`https://purge.jsdelivr.net/gh/rixked/JellyGlass-Theme@main/jellyglass.css` once.
+`https://purge.jsdelivr.net/gh/rixked/jellyglass-theme@main/jellyglass.css` once.
 
 If you'd rather not load anything from outside, paste the full contents of [`jellyglass.css`](jellyglass.css) into the box instead.
 
@@ -36,6 +36,23 @@ If you'd rather not load anything from outside, paste the full contents of [`jel
 | Video player | Minimal controls (no box), thin progress line, clear chapter markers, glass *Skip Intro* button (works with Intro Skipper), glass *Up Next* card, glass audio/subtitle/settings menus |
 | Dropdowns | Audio/subtitle pickers as glass pills; the open list is a glass panel in Chromium browsers |
 | Settings, filters, login | Glass panels, green focus rings, cleaned-up filter and sort panels |
+
+## Optional: Dense layout add-on
+
+`jellyglass-dense.css` turns show, season, movie and episode pages on desktop (1200 px and wider) into three columns:
+
+- **Left:** poster with title and info.
+- **Middle:** a 16:9 window onto the artwork with the Play bar, then audio/subtitles, *Next Up*, description and details.
+- **Right:** the episode or season list, plus *More Like This*.
+
+The add-on uses flat black panels and a lime accent. Load it **after** the main theme:
+
+```css
+@import url("https://cdn.jsdelivr.net/gh/rixked/jellyglass-theme@main/jellyglass.css");
+@import url("https://cdn.jsdelivr.net/gh/rixked/jellyglass-theme@main/jellyglass-dense.css");
+```
+
+The artwork window needs **Backdrops** turned on. Your own colour line still works when you put it below both imports. Phones and smaller windows keep the normal JellyGlass layout.
 
 ## Customising
 
