@@ -622,6 +622,11 @@ body:not(:has(#videoOsdPage:not(.hide))) .MuiMenu-paper .MuiDivider-root {
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22), 0 4px 12px rgba(0, 0, 0, 0.35);
 }
 
+.card .cardOverlayFab-primary,
+.card .cardOverlayButton[data-action="play"] {
+  display: none !important;
+}
+
 .page:not(#videoOsdPage):not(#nowPlayingPage) .visualCardBox {
   background-color: var(--lg-tint);
   background-image: var(--lg-sheen);
@@ -1488,12 +1493,18 @@ html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailRibbon .btnPlay 
 html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailPageWrapperContainer {
   position: relative;
   isolation: isolate;
+  overflow-y: clip;
   background: none !important;
 }
-html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailPageWrapperContainer::before {
+/* the blurred, artwork-tinted background starts below the title and buttons
+   (top of the description), so the artwork stays sharp behind them */
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailPagePrimaryContent::before {
   content: "";
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 600vh;
   z-index: -1;
   pointer-events: none;
 
@@ -1506,8 +1517,8 @@ html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailPageWrapperConta
   -webkit-backdrop-filter: blur(60px) saturate(170%) brightness(var(--adaptive-light));
   backdrop-filter: blur(60px) saturate(170%) brightness(var(--adaptive-light));
 
-  -webkit-mask-image: linear-gradient(180deg, transparent 0, rgba(0, 0, 0, 0.5) 6vh, #000 15vh);
-  mask-image: linear-gradient(180deg, transparent 0, rgba(0, 0, 0, 0.5) 6vh, #000 15vh);
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, transparent 1.5vh, rgba(0, 0, 0, 0.3) 5vh, rgba(0, 0, 0, 0.75) 10vh, #000 15vh);
+  mask-image: linear-gradient(180deg, transparent 0, transparent 1.5vh, rgba(0, 0, 0, 0.3) 5vh, rgba(0, 0, 0, 0.75) 10vh, #000 15vh);
 }
 
 html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailPagePrimaryContent,
@@ -1516,20 +1527,15 @@ html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailPageSecondaryCon
 }
 
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailPageWrapperContainer {
-    background: linear-gradient(180deg,
-      rgba(11, 13, 18, 0) 0,
-      rgba(11, 13, 18, 0.35) 6vh,
-      rgba(11, 13, 18, 0.84) 15vh,
-      rgba(11, 13, 18, 0.95) 24vh,
-      rgba(11, 13, 18, 0.98) 100%) !important;
+  html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailPagePrimaryContent::before {
+    background: rgba(11, 13, 18, 0.96);
   }
 }
 
 html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailPagePrimaryContent {
   padding-left: 3.3% !important;
   padding-right: 3.3% !important;
-  padding-top: 1.4em;
+  padding-top: clamp(3em, 11vh, 7em);
 }
 html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailPagePrimaryContent > .detailSection {
   display: grid;
