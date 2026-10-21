@@ -195,12 +195,44 @@ body:not(.dashboardDocument):not(:has(#videoOsdPage:not(.hide))) .MuiAppBar-root
   mask-image: linear-gradient(180deg, #000 45%, transparent 100%);
 }
 
-body:has(#itemDetailPage:not(.hide)):not(.dashboardDocument) .MuiAppBar-root > .MuiToolbar-root:first-child {
-  background-color: rgba(14, 17, 23, 0.52);
+/* movie / show pages: no bar at all, only the buttons are small glass pills */
+body:has(#itemDetailPage:not(.hide)):not(.dashboardDocument) .MuiAppBar-root::before {
+  content: none !important;
 }
-body:has(#itemDetailPage:not(.hide)):not(.dashboardDocument) .MuiAppBar-root .MuiToolbar-root .MuiButton-root,
-body:has(#itemDetailPage:not(.hide)):not(.dashboardDocument) .MuiAppBar-root .MuiIconButton-root {
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+body:has(#itemDetailPage:not(.hide)):not(.dashboardDocument) .MuiAppBar-root > .MuiToolbar-root:first-child {
+  background: none;
+  border-color: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+body:has(#itemDetailPage:not(.hide)):not(.dashboardDocument) .MuiAppBar-root > .MuiToolbar-root:first-child :is(.MuiButton-root, .MuiIconButton-root) {
+  background-color: rgba(12, 14, 20, 0.30);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 4px 14px rgba(0, 0, 0, 0.25);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  backdrop-filter: blur(14px) saturate(160%);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+body:has(#itemDetailPage:not(.hide)):not(.dashboardDocument) .MuiAppBar-root > .MuiToolbar-root:first-child :is(.MuiButton-root, .MuiIconButton-root):hover {
+  background-color: rgba(12, 14, 20, 0.45);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+body:has(#itemDetailPage:not(.hide)):not(.dashboardDocument) .MuiAppBar-root > .MuiToolbar-root:first-child .MuiButton-textPrimary,
+body:has(#itemDetailPage:not(.hide)):not(.dashboardDocument) .MuiAppBar-root > .MuiToolbar-root:first-child .MuiButton-textPrimary:hover {
+  color: var(--lg-on-accent);
+  background-color: rgb(var(--lg-accent-rgb) / 0.9);
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0) 60%);
+  border-color: rgba(255, 255, 255, 0.35);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 4px 16px rgb(var(--lg-accent-rgb) / 0.35);
+  text-shadow: none;
+}
+body:has(#itemDetailPage:not(.hide)):not(.dashboardDocument) .MuiAppBar-root > .MuiToolbar-root:first-child .MuiButton-textPrimary :is(.MuiButton-startIcon, .MuiSvgIcon-root, .material-icons) {
+  color: var(--lg-on-accent) !important;
+  filter: none;
+}
+body:has(#itemDetailPage:not(.hide)):not(.dashboardDocument) .MuiAppBar-root > .MuiToolbar-root:first-child {
+  gap: 6px;
 }
 body:not(.dashboardDocument):not(:has(#videoOsdPage:not(.hide))) .MuiAppBar-root > .MuiToolbar-root {
   min-height: 44px !important;
