@@ -1,6 +1,6 @@
 # JellyGlass
 
-A liquid-glass theme for **Jellyfin 12** (built and tested on 12.1, web client). It adds frosted-glass surfaces, cinematic movie and show pages, a minimal video player and a mint-green accent. Everything is pure CSS: no plugins and no server changes.
+A liquid-glass theme for **Jellyfin 12** (built and tested on 12.1 and 12.2, web client). It adds frosted-glass surfaces, cinematic movie and show pages, a minimal video player and a mint-green accent. Everything is pure CSS: no plugins and no server changes.
 
 ## Install
 
@@ -25,12 +25,12 @@ If you'd rather not load anything from outside, paste the full contents of [`jel
 | Area | Look |
 | --- | --- |
 | Header | Floating glass capsule; library links as pills; quiet glass library toolbar |
-| Cards & posters | Rounded glass rim; on hover the card lifts with a 3D tilt and casts an "aura" in its own colours (no blur) |
+| Cards & posters | Rounded glass rim; on hover the card lifts with a 3D tilt and casts an "aura" in its own colours (no blur); no play button overlay |
 | Badges | Frosted "unwatched" counter with a green dot; green watched checkmarks |
-| Movie / show page (desktop) | Full-screen artwork, centered logo, white *Play* pill, two columns (details left, *Next Up* right), adaptive background tinted by the artwork |
+| Movie / show page (desktop) | Full-screen artwork, centered logo (the title text hides when a logo exists), white *Play* pill, glass info pills, two columns (details left, *Next Up* right), blurred background tinted by the artwork |
 | Movie / show page (phone) | Tall artwork that fades into the page, centered logo, wide *Play* pill |
-| Season page | Episodes as glass rows with a compact 16:9 thumbnail; watched episodes dimmed |
-| Home page | Small uppercase section labels; larger *Continue Watching* / *Next Up* cards; library tiles as banners |
+| Season page | Smaller artwork with the logo, then the episodes as frosted-glass bubbles over the sharp artwork; the thumbnail fills the left side of each bubble, bubbles lift on hover, watched episodes dimmed |
+| Home page | Small uppercase section labels; larger *Continue Watching* / *Next Up* cards; library tiles as banners; no needless scrolling when everything fits |
 | Search | Glass search pill; suggestions as pills |
 | Person pages | Round portrait, filmography in labelled rows |
 | Video player | Minimal controls (no box), thin progress line, clear chapter markers, glass *Skip Intro* button (works with Intro Skipper), glass *Up Next* card, glass audio/subtitle/settings menus |
@@ -56,7 +56,7 @@ The artwork window needs **Backdrops** turned on. Your own colour line still wor
 
 ## Optional: Jellyfin Enhanced add-on
 
-If you use the [Jellyfin Enhanced](https://github.com/n00bcodr/Jellyfin-Enhanced) plugin, `jellyglass-enhanced.css` gives its settings panel, toasts and poster tags (quality, rating, genre, age rating, language) the JellyGlass look. Load it after the main theme:
+If you use the [Jellyfin Enhanced](https://github.com/n00bcodr/Jellyfin-Enhanced) plugin, `jellyglass-enhanced.css` gives its settings panel, toasts and poster tags (quality, rating, genre, age rating, language) the JellyGlass look. Language flags sit in a row and are hidden on the home page; quality tags are hidden in the season episode list. Load it after the main theme:
 
 ```css
 @import url("https://cdn.jsdelivr.net/gh/rixked/jellyglass-theme@main/jellyglass.css");
@@ -64,6 +64,13 @@ If you use the [Jellyfin Enhanced](https://github.com/n00bcodr/Jellyfin-Enhanced
 ```
 
 Jellyfin Enhanced picks up the glass colours and your theme colour by itself.
+
+## Optional: scripts
+
+Two small scripts for the [JavaScript Injector](https://github.com/n00bcodr/Jellyfin-JavaScript-Injector) plugin. Paste a file's contents as a new script there. Both are optional; the theme works without them.
+
+- **`hover-backdrop.js`**: hover a movie, show or episode card and the page background blends into its artwork; move off and it fades out again. Fade times, zoom, blur and brightness are settings at the top of the file.
+- **`logo-poster-button.js`**: adds a button to movie, show and collection pages (admins only). One click draws the logo on a black 2:3 poster and saves it as the item's real poster, so it shows in every app. Undo via *Edit images*, or *Refresh metadata* with *Replace existing images*.
 
 ## Customising
 

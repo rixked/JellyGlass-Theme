@@ -390,6 +390,14 @@ body:not(.dashboardDocument):has(.MuiAppBar-root) .libraryPage:not(.itemDetailPa
   padding-top: 1.6em !important;
 }
 
+/* Jellyfin keeps 5em free at the bottom of every page for the music bar, so short
+   pages scroll a little even when everything fits. Only keep that room while music plays. */
+body:not(:has(.nowPlayingBar:not(.hide))) :is(
+  .page:not(#itemDetailPage):not(#videoOsdPage):not(#nowPlayingPage),
+  .pageWithAbsoluteTabs .pageTabContent) {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1em) !important;
+}
+
 .MuiAppBar-root .MuiAvatar-root {
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.22), 0 4px 12px rgba(0, 0, 0, 0.4);
   transition: box-shadow 0.25s var(--lg-ease);
@@ -2311,7 +2319,7 @@ html:not(.layout-mobile):not(.layout-tv) #itemDetailPage:has(#listChildrenCollap
   display: none !important;
 }
 html:not(.layout-mobile):not(.layout-tv) #itemDetailPage:has(#listChildrenCollapsible:not(.hide) .listItem[data-type="Episode"]) .detailPagePrimaryContent {
-  --lg-fade: clamp(2.5em, 8vh, 6em);
+  --lg-fade: clamp(1.5em, 4vh, 3em);
 }
 html:not(.layout-mobile):not(.layout-tv) #itemDetailPage:has(#listChildrenCollapsible:not(.hide) .listItem[data-type="Episode"]) .detailRibbon h3.itemName.subtitle {
   margin-top: 0.6em !important;
@@ -2365,33 +2373,64 @@ html:not(.layout-mobile):not(.layout-tv) #itemDetailPage #listChildrenCollapsibl
   font-size: 0.85em;
 }
 
+/* season page: no big blurred background; each episode bubble is frosted glass on its own */
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage:has(#listChildrenCollapsible:not(.hide) .listItem[data-type="Episode"]) .detailPagePrimaryContent {
+  padding-top: 1.5em;
+  &::before,
+  &::after {
+    content: none;
+  }
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage:has(#listChildrenCollapsible:not(.hide) .listItem[data-type="Episode"]) #listChildrenCollapsible .vertical-list > .listItem {
+  background-color: rgba(10, 12, 18, 0.42);
+  -webkit-backdrop-filter: blur(40px) saturate(170%);
+  backdrop-filter: blur(40px) saturate(170%);
+  border-color: rgba(255, 255, 255, 0.12);
+  &:is(:hover, :focus-visible) {
+    background-color: rgba(10, 12, 18, 0.5);
+    background-image: linear-gradient(rgb(var(--lg-accent-rgb) / 0.1), rgb(var(--lg-accent-rgb) / 0.1)), linear-gradient(160deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0) 50%);
+  }
+}
+
+/* the thumbnail fills the left side of the bubble from top to bottom,
+   and the bubble lifts on hover */
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage #listChildrenCollapsible .vertical-list > .listItem {
+  padding: 0 1em 0 0 !important;
+  align-items: stretch;
+  transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.35s var(--lg-ease), transform 0.35s var(--lg-ease);
+  &:is(:hover, :focus-visible) {
+    transform: translateY(-5px);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 0 0 1px rgb(var(--lg-accent-rgb) / 0.15), 0 18px 40px rgba(0, 0, 0, 0.45);
+  }
+  & .listItem-content {
+    align-items: stretch;
+  }
+  & .listItemImage-large {
+    align-self: stretch;
+    aspect-ratio: auto;
+    height: auto;
+    min-height: 7.5em;
+    border-radius: 21px 0 0 21px;
+    box-shadow: none;
+    outline: none;
+  }
+  & .listItemBody {
+    align-self: center;
+    padding: 0.9em 0 !important;
+  }
+  & .listItemButton {
+    align-self: center;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html:not(.layout-mobile):not(.layout-tv) #itemDetailPage #listChildrenCollapsible .vertical-list > .listItem:is(:hover, :focus-visible) {
+    transform: none;
+  }
+}
+
+/* no play button on the episode thumbnails */
 html:not(.layout-mobile):not(.layout-tv) #itemDetailPage #listChildrenCollapsible .listItemImageButton {
-  padding: 0;
-  color: #fff;
-  background: transparent;
-  opacity: 0;
-  transform: scale(0.9);
-  transition: opacity 0.25s ease, transform 0.25s ease;
-}
-html:not(.layout-mobile):not(.layout-tv) #itemDetailPage #listChildrenCollapsible .listItemImageButton-icon {
-  padding: 0.4em;
-  font-size: 1.15em;
-  color: #fff;
-  background: rgba(12, 14, 20, 0.55);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25), 0 6px 16px rgba(0, 0, 0, 0.45);
-  transition: background-color 0.2s ease, color 0.2s ease;
-}
-html:not(.layout-mobile):not(.layout-tv) #itemDetailPage #listChildrenCollapsible .listItem:hover .listItemImageButton {
-  opacity: 1;
-  transform: scale(1);
-}
-html:not(.layout-mobile):not(.layout-tv) #itemDetailPage #listChildrenCollapsible .listItemImageButton:hover {
-  background: transparent;
-  transform: scale(1.08);
-}
-html:not(.layout-mobile):not(.layout-tv) #itemDetailPage #listChildrenCollapsible .listItemImageButton:hover .listItemImageButton-icon {
-  color: var(--lg-on-accent);
-  background: var(--lg-accent);
+  display: none !important;
 }
 
 html:not(.layout-mobile):not(.layout-tv) #itemDetailPage #listChildrenCollapsible .listItem-content {

@@ -158,7 +158,7 @@
 }
 
 /* cards with a progress bar (Continue Watching): tags at the bottom sit above the bar */
-:root .cardScalable:has(.itemProgressBar, .itemLinearProgress) :is(.quality-overlay-container, .rating-overlay-container,
+:root .cardScalable:has(.itemProgressBar) :is(.quality-overlay-container, .rating-overlay-container,
   .genre-overlay-container, .age-rating-overlay-container, .language-overlay-container) {
   margin-bottom: 18px;
 }
@@ -180,5 +180,10 @@
 
 /* no language flags on the home page (Continue Watching, Next Up, latest …) */
 #indexPage .language-overlay-container {
+  display: none !important;
+}
+
+/* no quality tags on the episode list of a season */
+#itemDetailPage .listItem .quality-overlay-container {
   display: none !important;
 }
