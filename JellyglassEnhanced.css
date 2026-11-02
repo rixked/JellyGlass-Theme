@@ -1,0 +1,184 @@
+/* JellyGlass Enhanced — optional add-on for the Jellyfin Enhanced plugin
+   https://github.com/rixked/JellyGlass-Theme
+   Gives the plugin's panels, toasts and poster tags the JellyGlass look.
+   Load it AFTER the main theme (Dashboard → General → Custom CSS):
+   @import url("https://cdn.jsdelivr.net/gh/rixked/jellyglass-theme@main/jellyglass.css");
+   @import url("https://cdn.jsdelivr.net/gh/rixked/jellyglass-theme@main/jellyglass-enhanced.css"); */
+
+/* ===== 1. THEME HAND-OFF =====
+   Jellyfin Enhanced colours its settings panel, toasts, dialogs and Seerr
+   windows from a theme's CSS variables. It recognises themes by these
+   variable names, so JellyGlass offers them and every JE window picks up
+   the glass colours and your theme colour automatically. */
+:root {
+  --theme-updated-on: "jellyglass";
+  --primary-accent-color: rgb(var(--lg-accent-rgb));
+  --primary-background-transparent: rgba(14, 16, 22, 0.72);
+  --secondary-background-transparent: rgba(20, 24, 32, 0.62);
+  --alt-accent-color: rgba(255, 255, 255, 0.07);
+  --text-color: #ffffff;
+  --blur: 28px;
+}
+
+/* ===== 2. SETTINGS PANEL ===== */
+
+#jellyfin-enhanced-panel {
+  background: rgba(14, 16, 22, 0.72) !important;
+  background-image: var(--lg-sheen) !important;
+  -webkit-backdrop-filter: var(--lg-blur) !important;
+  backdrop-filter: var(--lg-blur) !important;
+  border: 1px solid var(--lg-edge) !important;
+  border-radius: var(--lg-r-lg) !important;
+  box-shadow: var(--lg-highlight), 0 30px 80px rgba(0, 0, 0, 0.6) !important;
+}
+#jellyfin-enhanced-panel .je-panel-body {
+  background: transparent !important;
+}
+#jellyfin-enhanced-panel .panel-header {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+}
+#jellyfin-enhanced-panel .je-panel-nav {
+  background: rgba(0, 0, 0, 0.12);
+  border-right-color: rgba(255, 255, 255, 0.07);
+}
+#jellyfin-enhanced-panel .tab-button {
+  border-radius: var(--lg-r-sm);
+}
+#jellyfin-enhanced-panel .tab-button.active {
+  background: rgb(var(--lg-accent-rgb) / 0.14);
+}
+#jellyfin-enhanced-panel .je-panel-search,
+#jellyfin-enhanced-panel select,
+#jellyfin-enhanced-panel input[type="number"],
+#jellyfin-enhanced-panel input[type="text"] {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: var(--lg-r-sm) !important;
+}
+#jellyfin-enhanced-panel .je-panel-search:focus,
+#jellyfin-enhanced-panel select:focus,
+#jellyfin-enhanced-panel input:focus {
+  border-color: var(--lg-accent) !important;
+  box-shadow: 0 0 0 3px var(--lg-accent-ring);
+}
+#jellyfin-enhanced-panel input[type="checkbox"] {
+  accent-color: var(--lg-accent);
+}
+#jellyfin-enhanced-panel kbd,
+#jellyfin-enhanced-panel .shortcut-key {
+  border-radius: 6px !important;
+}
+@media (max-width: 760px) {
+  #jellyfin-enhanced-panel {
+    border-radius: 0 !important;
+    border: 0 !important;
+  }
+  #jellyfin-enhanced-panel .je-panel-main {
+    background: rgba(14, 16, 22, 0.96) !important;
+  }
+}
+
+/* ===== 3. TOASTS ===== */
+
+.jellyfin-enhanced-toast {
+  border-radius: var(--lg-pill) !important;
+  padding: 10px 18px !important;
+  background: rgba(20, 24, 32, 0.62) !important;
+  background-image: var(--lg-sheen) !important;
+  border: 1px solid var(--lg-edge) !important;
+  box-shadow: var(--lg-highlight), var(--lg-drop) !important;
+  text-shadow: none !important;
+}
+
+/* ===== 4. POSTER TAGS (quality, rating, genre, age rating, language) =====
+   Uniform glass chips instead of the coloured blocks, a little further in
+   from the edges so they clear the rounded poster corners. */
+
+:root .cardScalable :is(.quality-overlay-container, .rating-overlay-container,
+  .genre-overlay-container, .age-rating-overlay-container, .language-overlay-container) {
+  margin: 4px;
+  gap: 4px;
+}
+
+:root .cardScalable .quality-overlay-container .quality-overlay-label[data-quality],
+:root .cardScalable .rating-overlay-container .rating-tag,
+:root .cardScalable .age-rating-overlay-container .age-rating-tag {
+  padding: 2px 8px !important;
+  font-size: clamp(0.6rem, 0.55rem + 0.2vw, 0.75rem) !important;
+  font-weight: 700;
+  font-variant-caps: normal;
+  letter-spacing: 0.04em;
+  line-height: 1.5;
+  color: #fff !important;
+  background: rgba(12, 14, 20, 0.62) !important;
+  background-image: linear-gradient(160deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0) 60%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  border-radius: var(--lg-pill) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22) !important;
+}
+/* 4K / HDR / Dolby stand out in the theme colour */
+:root .cardScalable .quality-overlay-container .quality-overlay-label:is(
+  [data-quality="8K"], [data-quality="4K"], [data-quality="HDR"], [data-quality="HDR10"],
+  [data-quality="HDR10+"], [data-quality="Dolby Vision"], [data-quality="IMAX"], [data-quality="ATMOS"]) {
+  color: var(--lg-on-accent) !important;
+  background: rgb(var(--lg-accent-rgb) / 0.9) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+:root .cardScalable .rating-overlay-container .rating-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+:root .cardScalable .rating-overlay-container .rating-star-icon {
+  color: #f5c518 !important;
+  font-size: 1.05em !important;
+}
+
+:root .cardScalable .genre-overlay-container .genre-tag {
+  background: rgba(12, 14, 20, 0.62) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22) !important;
+  color: #fff !important;
+}
+
+/* flags side by side and smaller instead of a tall stack */
+:root .cardScalable .language-overlay-container {
+  flex-direction: row !important;
+  flex-wrap: wrap;
+  gap: 4px !important;
+  max-width: calc(100% - 16px);
+}
+:root .cardScalable .language-overlay-container .language-flag {
+  width: clamp(18px, 1.5vw, 24px) !important;
+  height: auto;
+  border-radius: 3px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25);
+}
+
+/* cards with a progress bar (Continue Watching): tags at the bottom sit above the bar */
+:root .cardScalable:has(.itemProgressBar, .itemLinearProgress) :is(.quality-overlay-container, .rating-overlay-container,
+  .genre-overlay-container, .age-rating-overlay-container, .language-overlay-container) {
+  margin-bottom: 18px;
+}
+
+/* ===== 5. SMALL BITS ===== */
+
+/* random-item dice in the header behaves like the other header buttons */
+#randomItemButton {
+  border-radius: 50%;
+}
+
+/* Seerr issue dialog options use the theme colour */
+.jellyseerr-radio-option {
+  border-radius: var(--lg-pill) !important;
+}
+.jellyseerr-radio-input:checked + .jellyseerr-radio-option {
+  color: var(--lg-on-accent) !important;
+}
+
+/* no language flags on the home page (Continue Watching, Next Up, latest …) */
+#indexPage .language-overlay-container {
+  display: none !important;
+}

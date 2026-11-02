@@ -54,6 +54,17 @@ The add-on uses flat black panels and a lime accent. Load it **after** the main 
 
 The artwork window needs **Backdrops** turned on. Your own colour line still works when you put it below both imports. Phones and smaller windows keep the normal JellyGlass layout.
 
+## Optional: Jellyfin Enhanced add-on
+
+If you use the [Jellyfin Enhanced](https://github.com/n00bcodr/Jellyfin-Enhanced) plugin, `jellyglass-enhanced.css` gives its settings panel, toasts and poster tags (quality, rating, genre, age rating, language) the JellyGlass look. Load it after the main theme:
+
+```css
+@import url("https://cdn.jsdelivr.net/gh/rixked/jellyglass-theme@main/jellyglass.css");
+@import url("https://cdn.jsdelivr.net/gh/rixked/jellyglass-theme@main/jellyglass-enhanced.css");
+```
+
+Jellyfin Enhanced picks up the glass colours and your theme colour by itself.
+
 ## Customising
 
 ### Theme colour (one line)
