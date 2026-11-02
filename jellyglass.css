@@ -247,16 +247,34 @@ body:not(.dashboardDocument):not(:has(#videoOsdPage:not(.hide))) .MuiAppBar-root
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.20), 0 6px 22px rgba(0, 0, 0, 0.28);
 }
 
+/* library toolbar (title, Play All, filter, sort …): no bar, only glass pills */
 body:not(.dashboardDocument):not(:has(#videoOsdPage:not(.hide))) .MuiAppBar-root > .MuiToolbar-root + .MuiToolbar-root {
   min-height: 38px !important;
   padding: 0 8px 0 10px !important;
-  border-radius: 16px;
-  background-color: rgba(16, 19, 26, 0.22);
-  background-image: none;
+  gap: 6px;
+  border-radius: 0;
+  background: none !important;
   border-color: transparent;
   box-shadow: none;
-  -webkit-backdrop-filter: blur(18px) saturate(150%);
-  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+body:not(.dashboardDocument) .MuiAppBar-root > .MuiToolbar-root + .MuiToolbar-root > :is(.MuiButton-root, .MuiTypography-root, h1, h2, h3) {
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6), 0 0 12px rgba(0, 0, 0, 0.35);
+}
+body:not(.dashboardDocument) .MuiAppBar-root > .MuiToolbar-root + .MuiToolbar-root .MuiButtonGroup-root,
+body:not(.dashboardDocument) .MuiAppBar-root > .MuiToolbar-root + .MuiToolbar-root .MuiIconButton-root:not(.MuiButtonGroup-root .MuiIconButton-root) {
+  background-color: rgba(12, 14, 20, 0.32) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 4px 14px rgba(0, 0, 0, 0.22) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  backdrop-filter: blur(14px) saturate(160%);
+}
+body:not(.dashboardDocument) .MuiAppBar-root > .MuiToolbar-root + .MuiToolbar-root .MuiButtonGroup-root :is(.MuiButton-root, .MuiIconButton-root) {
+  background-color: transparent;
+}
+body:not(.dashboardDocument) .MuiAppBar-root > .MuiToolbar-root + .MuiToolbar-root .MuiButtonGroup-root :is(.MuiButton-root, .MuiIconButton-root):hover {
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 body:not(.dashboardDocument) .MuiAppBar-root > .MuiToolbar-root + .MuiToolbar-root > .MuiButton-root {
@@ -285,7 +303,7 @@ body:not(.dashboardDocument) .MuiAppBar-root > .MuiToolbar-root + .MuiToolbar-ro
   min-height: 0;
   font-size: 0.8rem;
   color: rgba(255, 255, 255, 0.9);
-  background-color: rgba(255, 255, 255, 0.07);
+  background-color: transparent;
   box-shadow: none;
   border: 0;
   border-right: 1px solid rgba(255, 255, 255, 0.10) !important;
@@ -300,7 +318,7 @@ body:not(.dashboardDocument) .MuiAppBar-root > .MuiToolbar-root + .MuiToolbar-ro
 
 body:not(.dashboardDocument) .MuiAppBar-root > .MuiToolbar-root + .MuiToolbar-root .MuiIconButton-root,
 body:not(.dashboardDocument) .MuiAppBar-root > .MuiToolbar-root + .MuiToolbar-root .MuiButtonGroup-root:not(.MuiButtonGroup-contained) .MuiButton-root {
-  color: rgba(255, 255, 255, 0.72);
+  color: rgba(255, 255, 255, 0.88);
 }
 body:not(.dashboardDocument) .MuiAppBar-root > .MuiToolbar-root + .MuiToolbar-root .MuiSvgIcon-root {
   font-size: 19px;
@@ -1415,12 +1433,7 @@ html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailRibbon {
   isolation: isolate;
 }
 html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailRibbon::before {
-  content: "";
-  position: absolute;
-  inset: -2.5em 18% -1.5em;
-  z-index: -1;
-  pointer-events: none;
-  background: radial-gradient(ellipse at center, rgba(8, 10, 14, 0.42) 0%, rgba(8, 10, 14, 0.22) 45%, transparent 72%);
+  content: none;
 }
 html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailRibbon .infoWrapper {
   flex: 0 0 auto;
@@ -1527,6 +1540,11 @@ html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailPageWrapperConta
   isolation: isolate;
   overflow-y: clip;
   background: none !important;
+  /* the page's bottom spacing moves inside, so the blurred background reaches the very end */
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 5em);
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage.itemDetailPage {
+  padding-bottom: 0 !important;
 }
 /* the blurred, artwork-tinted background starts below the title and buttons
    (top of the description), so the artwork stays sharp behind them */
@@ -1536,7 +1554,7 @@ html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailPagePrimaryConte
   top: 0;
   left: 0;
   right: 0;
-  height: 600vh;
+  height: 100000px;   /* "to the end of the page"; the wrapper clips the rest */
   z-index: -1;
   pointer-events: none;
 
@@ -1549,8 +1567,25 @@ html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailPagePrimaryConte
   -webkit-backdrop-filter: blur(60px) saturate(170%) brightness(var(--adaptive-light));
   backdrop-filter: blur(60px) saturate(170%) brightness(var(--adaptive-light));
 
-  -webkit-mask-image: linear-gradient(180deg, transparent 0, transparent 1.5vh, rgba(0, 0, 0, 0.3) 5vh, rgba(0, 0, 0, 0.75) 10vh, #000 15vh);
-  mask-image: linear-gradient(180deg, transparent 0, transparent 1.5vh, rgba(0, 0, 0, 0.3) 5vh, rgba(0, 0, 0, 0.75) 10vh, #000 15vh);
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, transparent calc(var(--lg-fade) * 0.25), rgba(0, 0, 0, 0.35) calc(var(--lg-fade) * 0.5), rgba(0, 0, 0, 0.8) calc(var(--lg-fade) * 0.75), #000 calc(var(--lg-fade) * 0.92));
+  mask-image: linear-gradient(180deg, transparent 0, transparent calc(var(--lg-fade) * 0.25), rgba(0, 0, 0, 0.35) calc(var(--lg-fade) * 0.5), rgba(0, 0, 0, 0.8) calc(var(--lg-fade) * 0.75), #000 calc(var(--lg-fade) * 0.92));
+}
+
+/* a lighter blur in front of the strong one, so the artwork goes soft step by step
+   instead of a sharp and a blurred copy fading into each other */
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailPagePrimaryContent::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--lg-fade);
+  z-index: -1;
+  pointer-events: none;
+  -webkit-backdrop-filter: blur(10px) saturate(130%) brightness(0.85);
+  backdrop-filter: blur(10px) saturate(130%) brightness(0.85);
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 calc(var(--lg-fade) * 0.25), #000 calc(var(--lg-fade) * 0.55), transparent var(--lg-fade));
+  mask-image: linear-gradient(180deg, transparent 0, #000 calc(var(--lg-fade) * 0.25), #000 calc(var(--lg-fade) * 0.55), transparent var(--lg-fade));
 }
 
 html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailPagePrimaryContent,
@@ -1567,11 +1602,13 @@ html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailPageSecondaryCon
 html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailPagePrimaryContent {
   padding-left: 3.3% !important;
   padding-right: 3.3% !important;
-  padding-top: clamp(3em, 11vh, 7em);
+  /* the text starts exactly where the blur is complete */
+  --lg-fade: clamp(4em, 16vh, 12em);
+  padding-top: var(--lg-fade);
 }
 html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailPagePrimaryContent > .detailSection {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(300px, 34%);
+  grid-template-columns: minmax(0, 1fr) minmax(300px, min(34%, 34rem));
 
   grid-template-rows: repeat(8, auto) 1fr auto;
   column-gap: clamp(2em, 4vw, 5em);
@@ -1614,6 +1651,7 @@ html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailSection > #listC
 }
 html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailSection > .nextUpSection .card {
   width: 100% !important;
+  max-width: 34rem;
 }
 
 html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailSection > #listChildrenCollapsible .vertical-wrap {
@@ -1643,6 +1681,73 @@ html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .itemExternalLinks {
 }
 html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .itemDetailsGroup {
   margin-top: 1.6em;
+}
+
+/* everything on top of the artwork gets a crisp, stacked "3D" shadow instead of a soft glow */
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage {
+  --lg-3d-text: 0 1px 0 rgba(0, 0, 0, 0.5), 0 2px 0 rgba(0, 0, 0, 0.32), 0 3px 0 rgba(0, 0, 0, 0.18), 0 5px 9px rgba(0, 0, 0, 0.35);
+  --lg-3d-icon: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.5)) drop-shadow(0 2px 0 rgba(0, 0, 0, 0.3)) drop-shadow(0 4px 6px rgba(0, 0, 0, 0.35));
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailRibbon :is(.itemName, .parentName, .originalTitle, .itemMiscInfo, .itemMiscInfo *, a) {
+  text-shadow: var(--lg-3d-text) !important;
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailRibbon .itemMiscInfo-primary > .mediaInfoOfficialRating {
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5), 0 2px 0 rgba(0, 0, 0, 0.3), 0 4px 8px rgba(0, 0, 0, 0.3),
+              inset 0 1px 0 rgba(0, 0, 0, 0.35);
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailRibbon .starIcon {
+  filter: var(--lg-3d-icon);
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailRibbon .detailButton:not(.btnPlay) {
+  filter: var(--lg-3d-icon) !important;
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailRibbon .detailButton.btnPlay {
+  box-shadow: inset 0 1px 0 #fff, 0 2px 0 rgba(0, 0, 0, 0.28), 0 4px 0 rgba(0, 0, 0, 0.14), 0 10px 22px rgba(0, 0, 0, 0.4);
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailLogo {
+  filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.4)) drop-shadow(0 4px 0 rgba(0, 0, 0, 0.22)) drop-shadow(0 10px 18px rgba(0, 0, 0, 0.4));
+}
+
+/* the logo already shows the name, so hide the written title (episode / season names stay) */
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage:has(.detailLogo:not(.hide)) .detailRibbon :is(h1.itemName, h1.parentName, .originalTitle),
+html.layout-mobile #itemDetailPage:has(#itemBackdrop[style*="url("]):has(.detailLogo:not(.hide)) .detailRibbon :is(h1.itemName, h1.parentName, .originalTitle) {
+  display: none !important;
+}
+
+/* bright artwork: info line and icons sit on small glass pills so they stay readable */
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailRibbon .itemMiscInfo-primary {
+  width: fit-content;
+  margin: 0.7em auto 0 !important;
+  padding: 0.3em 1em;
+  border-radius: var(--lg-pill);
+  background-color: rgba(12, 14, 20, 0.34);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 4px 14px rgba(0, 0, 0, 0.22);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  backdrop-filter: blur(14px) saturate(160%);
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailRibbon h3.itemName.subtitle {
+  width: fit-content;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding: 0.2em 0.9em;
+  border-radius: var(--lg-pill);
+  background-color: rgba(12, 14, 20, 0.34);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  backdrop-filter: blur(14px) saturate(160%);
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailRibbon .detailButton:not(.btnPlay),
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailRibbon .detailButton:not(.btnPlay):hover {
+  background-color: rgba(12, 14, 20, 0.34);
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 4px 14px rgba(0, 0, 0, 0.22);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  backdrop-filter: blur(14px) saturate(160%);
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage .detailRibbon .detailButton:not(.btnPlay):hover {
+  background-color: rgba(12, 14, 20, 0.5);
+  border-color: rgba(255, 255, 255, 0.24);
 }
 
 /* ===== 14. MINIMAL VIDEO PLAYER CONTROLS ===== */
@@ -2192,6 +2297,21 @@ body:has(#videoOsdPage:not(.hide)) .actionSheet .actionsheetDivider {
 }
 
 /* ===== 16. SEASON PAGE ===== */
+
+/* only the logo, the season name and the episodes; smaller artwork on top */
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage:has(#listChildrenCollapsible:not(.hide) .listItem[data-type="Episode"]) {
+  --hero-h: clamp(10em, 30vh, 19em);
+  --logo-h: clamp(4em, 14vh, 8em);
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage:has(#listChildrenCollapsible:not(.hide) .listItem[data-type="Episode"]) :is(.itemMiscInfo, .mainDetailButtons, .detailSectionContent, .itemDetailsGroup, .detailPageSecondaryContainer) {
+  display: none !important;
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage:has(#listChildrenCollapsible:not(.hide) .listItem[data-type="Episode"]) .detailPagePrimaryContent {
+  --lg-fade: clamp(2.5em, 8vh, 6em);
+}
+html:not(.layout-mobile):not(.layout-tv) #itemDetailPage:has(#listChildrenCollapsible:not(.hide) .listItem[data-type="Episode"]) .detailRibbon h3.itemName.subtitle {
+  margin-top: 0.6em !important;
+}
 
 html:not(.layout-mobile):not(.layout-tv) #itemDetailPage #listChildrenCollapsible .vertical-list {
   display: flex;
